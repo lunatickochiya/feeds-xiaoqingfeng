@@ -18,6 +18,14 @@
 			"path": "hometunnel/status"
 		}
 	},
+	"admin/services/hometunnel/diagram": {
+		"title": "Topology",
+		"order": 15,
+		"action": {
+			"type": "view",
+			"path": "hometunnel/diagram"
+		}
+	},
 	"admin/services/hometunnel/wizard": {
 		"title": "Wizard",
 		"order": 20,

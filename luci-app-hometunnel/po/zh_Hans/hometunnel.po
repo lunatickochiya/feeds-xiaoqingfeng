@@ -324,3 +324,120 @@ msgstr "⑤ 控制面 Worker"
 
 msgid "⑥ Verify & Finish"
 msgstr "⑥ 验证并完成"
+
+msgid "%d domains"
+msgstr "%d 个域名"
+
+msgid "+%d more"
+msgstr "还有 %d 条"
+
+msgid "Always-on mode · control plane not used"
+msgstr "常开模式 · 控制面未启用"
+
+msgid "Any device · no app needed"
+msgstr "任意设备 · 无需 App"
+
+msgid "Any external device"
+msgstr "外网任意设备"
+
+msgid "Auto-renew +%d min on traffic"
+msgstr "有流量自动续期 +%d 分钟"
+
+msgid "Bookmark"
+msgstr "书签"
+
+msgid "Browser"
+msgstr "浏览器"
+
+msgid "Cloudflare Worker (free)"
+msgstr "Cloudflare Worker（免费）"
+
+msgid "Cloudflare edge network"
+msgstr "Cloudflare 边缘网络"
+
+msgid "Control plane · switch tunnel"
+msgstr "控制面 · 开关隧道"
+
+msgid "Control signaling (tunnel on/off)"
+msgstr "控制信令（开/关隧道）"
+
+msgid "Copied ✓"
+msgstr "已复制 ✓"
+
+msgid "Data plane · external access"
+msgstr "数据面 · 外网访问"
+
+msgid "Finish the 6-step wizard to see your live topology here."
+msgstr "完成 6 步向导后，这里将展示你的实时隧道拓扑。"
+
+msgid "LAN"
+msgstr "内网 LAN"
+
+msgid "Live topology generated from your configuration."
+msgstr "由你的配置实时生成的拓扑图。"
+
+msgid "No ingress rules yet"
+msgstr "还没有接入规则"
+
+msgid "ON · %d min left"
+msgstr "ON · 剩余 %d 分钟"
+
+msgid "OpenWrt router"
+msgstr "OpenWrt 路由器"
+
+msgid "Polls /cmd every %ds"
+msgstr "每 %ds 轮询 /cmd"
+
+msgid "Save these as bookmarks on any device to open/close the tunnel from anywhere:"
+msgstr "保存为任意设备的浏览器书签，即可随时随地打开/关闭隧道："
+
+msgid "Traffic (HTTPS)"
+msgstr "访问流量（HTTPS）"
+
+msgid "Tunnel Topology"
+msgstr "隧道拓扑"
+
+msgid "Tunnel off · unreachable"
+msgstr "隧道未开启 · 不可达"
+
+msgid "Wizard incomplete - topology pending"
+msgstr "向导未完成 · 拓扑待生成"
+
+msgid "auto-off after %dh hard cap"
+msgstr "%d 小时硬上限自动熄灭"
+
+msgid "ctl-loop daemon"
+msgstr "ctl-loop 守护进程"
+
+msgid "no hard cap"
+msgstr "无硬上限"
+
+msgid "start / stop"
+msgstr "拉起 / 熄灭"
+
+msgid "tunnel data engine"
+msgstr "隧道数据引擎"
+
+msgid "① Bookmark ON / OFF"
+msgstr "① 书签开 / 关"
+
+msgid "② Poll commands"
+msgstr "② 轮询指令"
+
+msgid "③ HTTPS"
+msgstr "③ HTTPS"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Topology"
+msgstr "拓扑"
+
+msgid "Wizard"
+msgstr "向导"
+
+msgid "Ingress Rules"
+msgstr "接入规则"
+
+msgid "Settings"
+msgstr "设置"

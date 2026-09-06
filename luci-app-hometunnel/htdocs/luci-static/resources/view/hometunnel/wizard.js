@@ -138,6 +138,7 @@ return view.extend({
 	},
 
 	watchLogin: function (urlBox) {
+		var self = this;
 		return jobOut('login').then(function (text) {
 			var url = extractAuthUrl(text);
 			if (url && !urlBox.dataset.filled) {
@@ -150,8 +151,29 @@ return view.extend({
 				if (st && st.size > 0) {
 					urlBox.appendChild(E('div', { 'class': 'alert-message success' }, _('Authorized! Loading next step…')));
 					window.setTimeout(function () { location.reload(); }, 1200);
+					return;
 				}
-			}).catch(function () { /* not yet */ });
+				return self.reportLoginFailure(urlBox, text);
+			}).catch(function () {
+				return self.reportLoginFailure(urlBox, text);
+			});
+		});
+	},
+
+	/* job 已退出但 cert 未到 → 显示错误并停止轮询 */
+	reportLoginFailure: function (urlBox, text) {
+		return jobPoll('login').then(function (st) {
+			if (st.state === 'done' && st.rc !== 0 && !urlBox.dataset.failed) {
+				urlBox.dataset.failed = '1';
+				var tail = (text || '').trim().split('\n').slice(-3).join('\n');
+				urlBox.appendChild(E('div', { 'class': 'alert-message error' }, [
+					E('div', {}, _('cloudflared exited before the certificate was fetched:')),
+					E('pre', { 'style': 'white-space:pre-wrap;margin:4px 0;font-size:12px' }, tail),
+					E('div', {}, _('Fix the issue (e.g. router DNS), reload this page and try again.'))
+				]));
+			}
+			if (urlBox.dataset.failed)
+				return Promise.reject('login job failed');
 		});
 	},
 

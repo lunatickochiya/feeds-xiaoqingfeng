@@ -323,3 +323,120 @@ msgstr ""
 
 msgid "⑥ Verify & Finish"
 msgstr ""
+
+msgid "%d domains"
+msgstr ""
+
+msgid "+%d more"
+msgstr ""
+
+msgid "Always-on mode · control plane not used"
+msgstr ""
+
+msgid "Any device · no app needed"
+msgstr ""
+
+msgid "Any external device"
+msgstr ""
+
+msgid "Auto-renew +%d min on traffic"
+msgstr ""
+
+msgid "Bookmark"
+msgstr ""
+
+msgid "Browser"
+msgstr ""
+
+msgid "Cloudflare Worker (free)"
+msgstr ""
+
+msgid "Cloudflare edge network"
+msgstr ""
+
+msgid "Control plane · switch tunnel"
+msgstr ""
+
+msgid "Control signaling (tunnel on/off)"
+msgstr ""
+
+msgid "Copied ✓"
+msgstr ""
+
+msgid "Data plane · external access"
+msgstr ""
+
+msgid "Finish the 6-step wizard to see your live topology here."
+msgstr ""
+
+msgid "LAN"
+msgstr ""
+
+msgid "Live topology generated from your configuration."
+msgstr ""
+
+msgid "No ingress rules yet"
+msgstr ""
+
+msgid "ON · %d min left"
+msgstr ""
+
+msgid "OpenWrt router"
+msgstr ""
+
+msgid "Polls /cmd every %ds"
+msgstr ""
+
+msgid "Save these as bookmarks on any device to open/close the tunnel from anywhere:"
+msgstr ""
+
+msgid "Traffic (HTTPS)"
+msgstr ""
+
+msgid "Tunnel Topology"
+msgstr ""
+
+msgid "Tunnel off · unreachable"
+msgstr ""
+
+msgid "Wizard incomplete - topology pending"
+msgstr ""
+
+msgid "auto-off after %dh hard cap"
+msgstr ""
+
+msgid "ctl-loop daemon"
+msgstr ""
+
+msgid "no hard cap"
+msgstr ""
+
+msgid "start / stop"
+msgstr ""
+
+msgid "tunnel data engine"
+msgstr ""
+
+msgid "① Bookmark ON / OFF"
+msgstr ""
+
+msgid "② Poll commands"
+msgstr ""
+
+msgid "③ HTTPS"
+msgstr ""
+
+msgid "Status"
+msgstr ""
+
+msgid "Topology"
+msgstr ""
+
+msgid "Wizard"
+msgstr ""
+
+msgid "Ingress Rules"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
