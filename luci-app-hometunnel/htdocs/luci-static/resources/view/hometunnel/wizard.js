@@ -39,9 +39,8 @@ return view.extend({
 		return uci.load('hometunnel');
 	},
 
-	render: function (data) {
+	render: function () {
 		var self = this;
-		this.uciData = data;
 
 		return this.probeState().then(function () {
 			return self.renderInner();
@@ -67,9 +66,8 @@ return view.extend({
 	},
 
 	getStep: function () {
-		var cfg = this.uciData;
 		if (!this.certOk) return 1;
-		if (!cfg.get('hometunnel', 'global', 'tunnel_id')) return 2;
+		if (!uci.get('hometunnel', 'global', 'tunnel_id')) return 2;
 		if (this.ingressCount < 1) return 3;
 		if (!this.dnsOk) return 4;
 		if (!this.workerOk) return 5;
@@ -162,7 +160,7 @@ return view.extend({
 		body.appendChild(E('p', {},
 			_('Create the tunnel on your Cloudflare account (uses the authorization from step ①).')));
 
-		var name = this.uciData.get('hometunnel', 'global', 'tunnel_name') || 'hometunnel';
+		var name = uci.get('hometunnel', 'global', 'tunnel_name') || 'hometunnel';
 		body.appendChild(E('p', {}, E('code', {}, name)));
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Create Tunnel'));
@@ -234,11 +232,11 @@ return view.extend({
 
 	/* ---- 步骤 5: worker bundle ---- */
 	step5: function (body) {
-		var domain = this.uciData.get('hometunnel', 'global', 'domain');
+		var domain = uci.get('hometunnel', 'global', 'domain');
 		body.appendChild(E('p', {}, [
 			_('Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. ') +
 			_('This deploys the control-plane Worker to <code>%s.%s</code> (custom domain, free tier).')
-				.format(this.uciData.get('hometunnel', 'global', 'ctl_hostname') || 'ctl', domain)
+				.format(uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl', domain)
 		]));
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Generate Bundle'));
@@ -292,7 +290,7 @@ return view.extend({
 
 	/* ---- 步骤 6: verify + finish ---- */
 	step6: function (body) {
-		var mode = this.uciData.get('hometunnel', 'global', 'mode') || 'ondemand';
+		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		body.appendChild(E('p', {},
 			_('Verify the control plane from the router, then enable the daemon and go to the status page.')));
 

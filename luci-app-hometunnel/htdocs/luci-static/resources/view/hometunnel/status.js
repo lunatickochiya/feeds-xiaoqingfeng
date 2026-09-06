@@ -41,159 +41,162 @@ function parseCtlJson(text) {
 
 return view.extend({
 	load: function () {
+		/* uci.load 仅预载缓存；render 里用全局 uci.get() 读取 */
+		return uci.load('hometunnel');
+	},
+
+	render: function () {
 		return Promise.all([
-			uci.load('hometunnel'),
 			getServiceRunning('hometunnel'),
 			getServiceRunning('hometunnel-ctl'),
 			getBackendStatus(),
 			fs.read('/etc/hometunnel/ctl.key').catch(function () { return null; })
-		]);
-	},
+		]).then(L.bind(function (data) {
+			var tunnelRunning = data[0],
+			    ctlRunning = data[1],
+			    backendStatus = data[2] || '',
+			    ctlKey = (data[3] || '').trim();
 
-	render: function (data) {
-		var uciData = data[0],
-		    tunnelRunning = data[1],
-		    ctlRunning = data[2],
-		    backendStatus = data[3] || '',
-		    ctlKey = (data[4] || '').trim();
+			var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
+			var domain = uci.get('hometunnel', 'global', 'domain') || '';
+			var ctlHost = uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl';
+			var ctlUrl = domain ? ('https://' + ctlHost + '.' + domain) : '';
+			var defaultTtl = uci.get('hometunnel', 'global', 'default_ttl') || '45';
+			var configured = !!uci.get('hometunnel', 'global', 'tunnel_id');
 
-		var mode = uciData.get('hometunnel', 'global', 'mode') || 'ondemand';
-		var domain = uciData.get('hometunnel', 'global', 'domain') || '';
-		var ctlHost = uciData.get('hometunnel', 'global', 'ctl_hostname') || 'ctl';
-		var ctlUrl = domain ? ('https://' + ctlHost + '.' + domain) : '';
-		var defaultTtl = uciData.get('hometunnel', 'global', 'default_ttl') || '45';
-		var configured = !!uciData.get('hometunnel', 'global', 'tunnel_id');
+			var ctlJson = parseCtlJson(backendStatus);
 
-		var ctlJson = parseCtlJson(backendStatus);
-
-		var container = E('div', {}, [
-			E('h2', {}, _('HomeTunnel')),
-			E('div', { 'class': 'cbi-section-descr' },
-				_('HomeLede intranet exposure via a free Cloudflare Tunnel.') +
-				(ctlUrl ? ' ' + _('Control plane: %s').format(ctlUrl) : ''))
-		]);
-
-		if (!configured) {
-			container.appendChild(E('div', { 'class': 'alert-message warning' }, [
-				E('p', {}, _('Setup is not complete. Run the wizard first.')),
-				E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Wizard'))
-			]));
-			return container;
-		}
-
-		/* ---- 状态表 ---- */
-		var label = function (ok, text) {
-			return E('span', { 'class': ok ? 'label success' : 'label' }, text || (ok ? _('running') : _('stopped')));
-		};
-
-		var table = E('table', { 'class': 'table', 'id': 'ht-status-table' }, [
-			E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Tunnel service'))),
-				E('td', { 'class': 'td left' }, label(tunnelRunning))
-			]),
-			E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td left' }, E('strong', {}, _('Mode'))),
-				E('td', { 'class': 'td left' }, mode === 'ondemand' ? _('on-demand (Worker controlled)') : _('always-on'))
-			])
-		]);
-
-		if (mode === 'ondemand') {
-			table.appendChild(E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td left' }, E('strong', {}, _('Control daemon'))),
-				E('td', { 'class': 'td left', 'id': 'ht-ctl-svc' }, label(ctlRunning))
-			]));
-			table.appendChild(E('tr', { 'class': 'tr' }, [
-				E('td', { 'class': 'td left' }, E('strong', {}, _('Control plane state'))),
-				E('td', { 'class': 'td left', 'id': 'ht-ctl-state' }, this.fmtCtlState(ctlJson))
-			]));
-		}
-
-		container.appendChild(E('div', { 'class': 'cbi-section' }, [table]));
-
-		/* ---- on-demand: 开/关 + 书签 ---- */
-		if (mode === 'ondemand' && ctlUrl && ctlKey) {
-			var onUrl = ctlUrl + '/on?key=' + encodeURIComponent(ctlKey);
-			var offUrl = ctlUrl + '/off?key=' + encodeURIComponent(ctlKey);
-
-			var resultDiv = E('div', { 'id': 'ht-action-result', 'style': 'margin-top:8px' });
-
-			var doAction = function (action, ev) {
-				ev.preventDefault();
-				ev.target.disabled = true;
-				resultDiv.textContent = _('Please wait…');
-				fs.exec('/usr/share/hometunnel/hometunnel.sh', ['ctl', action]).then(function (res) {
-					resultDiv.textContent = (res.stdout || res.stderr || '').trim() || _('done');
-					ev.target.disabled = false;
-				}).catch(function () {
-					resultDiv.textContent = _('failed');
-					ev.target.disabled = false;
-				});
-			};
-
-			var btnOn = E('button', {
-				'class': 'btn cbi-button cbi-button-apply important',
-				'click': doAction.bind(this, 'on')
-			}, _('Turn On (%d min)').format(defaultTtl));
-
-			var btnOff = E('button', {
-				'class': 'btn cbi-button cbi-button-reset negative',
-				'click': doAction.bind(this, 'off')
-			}, _('Turn Off'));
-
-			/* 书签 URL（含 key）——复制按钮 */
-			var copyBtn = function (url, ev) {
-				ev.preventDefault();
-				if (navigator.clipboard && navigator.clipboard.writeText)
-					navigator.clipboard.writeText(url);
-				var btnEl = ev.target;
-				btnEl.classList.add('spinning');
-				window.setTimeout(function () { btnEl.classList.remove('spinning'); }, 600);
-			};
-
-			container.appendChild(E('div', { 'class': 'cbi-section' }, [
-				E('h3', {}, _('Remote on/off')),
-				E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap' }, [btnOn, btnOff]),
-				resultDiv,
-				E('h3', {}, _('Bookmarks (phone)')),
+			var container = E('div', {}, [
+				E('h2', {}, _('HomeTunnel')),
 				E('div', { 'class': 'cbi-section-descr' },
-					_('Save these as browser bookmarks on your phone to open/close the tunnel from anywhere:')),
-				E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, [
-					E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, onUrl) }, _('Copy ON url')),
-					E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, offUrl) }, _('Copy OFF url'))
+					_('HomeLede intranet exposure via a free Cloudflare Tunnel.') +
+					(ctlUrl ? ' ' + _('Control plane: %s').format(ctlUrl) : ''))
+			]);
+
+			if (!configured) {
+				container.appendChild(E('div', { 'class': 'alert-message warning' }, [
+					E('p', {}, _('Setup is not complete. Run the wizard first.')),
+					E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Wizard'))
+				]));
+				return container;
+			}
+
+			/* ---- 状态表 ---- */
+			var label = function (ok, text) {
+				return E('span', { 'class': ok ? 'label success' : 'label' }, text || (ok ? _('running') : _('stopped')));
+			};
+
+			var table = E('table', { 'class': 'table', 'id': 'ht-status-table' }, [
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Tunnel service'))),
+					E('td', { 'class': 'td left' }, label(tunnelRunning))
 				]),
-				E('div', { 'style': 'margin-top:6px;word-break:break-all;font-size:12px' }, [
-					E('div', {}, onUrl),
-					E('div', {}, offUrl)
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Mode'))),
+					E('td', { 'class': 'td left' }, mode === 'ondemand' ? _('on-demand (Worker controlled)') : _('always-on'))
 				])
+			]);
+
+			if (mode === 'ondemand') {
+				table.appendChild(E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Control daemon'))),
+					E('td', { 'class': 'td left', 'id': 'ht-ctl-svc' }, label(ctlRunning))
+				]));
+				table.appendChild(E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Control plane state'))),
+					E('td', { 'class': 'td left', 'id': 'ht-ctl-state' }, this.fmtCtlState(ctlJson))
+				]));
+			}
+
+			container.appendChild(E('div', { 'class': 'cbi-section' }, [table]));
+
+			/* ---- on-demand: 开/关 + 书签 ---- */
+			if (mode === 'ondemand' && ctlUrl && ctlKey) {
+				var onUrl = ctlUrl + '/on?key=' + encodeURIComponent(ctlKey);
+				var offUrl = ctlUrl + '/off?key=' + encodeURIComponent(ctlKey);
+
+				var resultDiv = E('div', { 'id': 'ht-action-result', 'style': 'margin-top:8px' });
+
+				var doAction = function (action, ev) {
+					ev.preventDefault();
+					ev.target.disabled = true;
+					resultDiv.textContent = _('Please wait…');
+					fs.exec('/usr/share/hometunnel/hometunnel.sh', ['ctl', action]).then(function (res) {
+						resultDiv.textContent = (res.stdout || res.stderr || '').trim() || _('done');
+						ev.target.disabled = false;
+					}).catch(function () {
+						resultDiv.textContent = _('failed');
+						ev.target.disabled = false;
+					});
+				};
+
+				var btnOn = E('button', {
+					'class': 'btn cbi-button cbi-button-apply important',
+					'click': doAction.bind(this, 'on')
+				}, _('Turn On (%d min)').format(defaultTtl));
+
+				var btnOff = E('button', {
+					'class': 'btn cbi-button cbi-button-reset negative',
+					'click': doAction.bind(this, 'off')
+				}, _('Turn Off'));
+
+				/* 书签 URL（含 key）——复制按钮 */
+				var copyBtn = function (url, ev) {
+					ev.preventDefault();
+					if (navigator.clipboard && navigator.clipboard.writeText)
+						navigator.clipboard.writeText(url);
+					var btnEl = ev.target;
+					btnEl.classList.add('spinning');
+					window.setTimeout(function () { btnEl.classList.remove('spinning'); }, 600);
+				};
+
+				container.appendChild(E('div', { 'class': 'cbi-section' }, [
+					E('h3', {}, _('Remote on/off')),
+					E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap' }, [btnOn, btnOff]),
+					resultDiv,
+					E('h3', {}, _('Bookmarks (phone)')),
+					E('div', { 'class': 'cbi-section-descr' },
+						_('Save these as browser bookmarks on your phone to open/close the tunnel from anywhere:')),
+					E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, [
+						E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, onUrl) }, _('Copy ON url')),
+						E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, offUrl) }, _('Copy OFF url'))
+					]),
+					E('div', { 'style': 'margin-top:6px;word-break:break-all;font-size:12px' }, [
+						E('div', {}, onUrl),
+						E('div', {}, offUrl)
+					])
+				]));
+			}
+
+			/* ---- 守护日志 ---- */
+			var logDiv = E('pre', { 'class': 'cbi-input-textarea', 'style': 'overflow:auto;max-height:220px;font-size:12px', 'id': 'ht-log' }, _('loading…'));
+			container.appendChild(E('div', { 'class': 'cbi-section' }, [
+				E('h3', {}, _('Recent daemon log')),
+				logDiv
 			]));
-		}
 
-		/* ---- 守护日志 ---- */
-		var logDiv = E('pre', { 'class': 'cbi-input-textarea', 'style': 'overflow:auto;max-height:220px;font-size:12px', 'id': 'ht-log' }, _('loading…'));
-		container.appendChild(E('div', { 'class': 'cbi-section' }, [
-			E('h3', {}, _('Recent daemon log')),
-			logDiv
-		]));
+			this.refreshLog(logDiv);
 
-		this.refreshLog(logDiv);
+			/* 定时刷新（控制面状态 + 日志），不整页重绘 */
+			var self = this;
+			poll.add(function () {
+				return Promise.all([
+					getBackendStatus(),
+					fs.exec('/sbin/logread', ['-e', 'hometunnel']).catch(function () { return { stdout: '' }; })
+				]).then(function (res) {
+					var cj = parseCtlJson(res[0]);
+					var stateEl = document.getElementById('ht-ctl-state');
+					if (stateEl) {
+						stateEl.innerHTML = '';
+						stateEl.appendChild(self.fmtCtlState(cj));
+					}
+					var logText = (res[1].stdout || '').trim().split('\n');
+					logDiv.textContent = logText.slice(-15).join('\n') || _('(empty)');
+				});
+			}, 10);
 
-		/* 定时刷新（控制面状态 + 日志），不整页重绘 */
-		var self = this;
-		poll.add(function () {
-			return Promise.all([
-				getBackendStatus(),
-				fs.exec('/sbin/logread', ['-e', 'hometunnel']).catch(function () { return { stdout: '' }; })
-			]).then(function (res) {
-				var cj = parseCtlJson(res[0]);
-				var stateEl = document.getElementById('ht-ctl-state');
-				if (stateEl) stateEl.innerHTML = '';
-				if (stateEl && cj) stateEl.appendChild(self.fmtCtlState(cj));
-				var logText = (res[1].stdout || '').trim().split('\n');
-				logDiv.textContent = logText.slice(-15).join('\n') || _('(empty)');
-			});
-		}, 10);
-
-		return container;
+			return container;
+		}, this));
 	},
 
 	fmtCtlState: function (cj) {
