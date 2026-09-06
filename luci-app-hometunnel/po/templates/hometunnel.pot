@@ -476,3 +476,30 @@ msgstr ""
 
 msgid "⑦ Verify & Finish"
 msgstr ""
+
+msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
+msgstr ""
+
+msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
+msgstr ""
+
+msgid "Tunnel on Cloudflare"
+msgstr ""
+
+msgid "certificate rejected"
+msgstr ""
+
+msgid "deleted on Cloudflare"
+msgstr ""
+
+msgid "ok"
+msgstr ""
+
+msgid "unknown"
+msgstr ""
+
+msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
+msgstr ""
+
+msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
+msgstr ""

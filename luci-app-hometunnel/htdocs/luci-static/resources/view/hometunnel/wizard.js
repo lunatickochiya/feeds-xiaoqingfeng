@@ -185,6 +185,22 @@ return view.extend({
 		body.appendChild(E('p', {},
 			_('Create the tunnel on your Cloudflare account (uses the authorization from step ①).')));
 
+		var self = this;
+		var warn = E('div', { 'class': 'alert-message warning', 'style': 'display:none' });
+		body.appendChild(warn);
+
+		/* CF 侧状态预检: tunnel 被删/凭据失效时提示自动恢复 */
+		fs.exec(HT, ['check']).then(function (res) {
+			var st = ((res.stdout || '') + (res.stderr || '')).match(/cf-tunnel:\s+(\S+)/);
+			var state = st ? st[1] : '';
+			if (state === 'missing' || state === 'auth-failed') {
+				warn.style.display = '';
+				warn.appendChild(E('div', {}, state === 'missing'
+					? _('The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤).')
+					: _('Cloudflare rejected the saved certificate. Re-run step ① first.')));
+			}
+		});
+
 		var name = uci.get('hometunnel', 'global', 'tunnel_name') || 'hometunnel';
 		body.appendChild(E('p', {}, E('code', {}, name)));
 
@@ -193,6 +209,7 @@ return view.extend({
 		btn.addEventListener('click', function (ev) {
 			ev.preventDefault();
 			btn.disabled = true;
+			out.textContent = 'running…';
 			fs.exec(HT, ['create']).then(function (res) {
 				out.textContent = (res.stdout || '') + (res.stderr || '');
 				if (res.code === 0) {

@@ -63,20 +63,39 @@ trap cleanup EXIT INT TERM
 # ---------- 布景 1: 假 UCI shim ----------
 cat > "$FAKE_ROOT/usr/bin/uci" <<'EOF'
 #!/bin/sh
-# 假 uci: 只支持 hometunnel.global.<opt> get，值来自 env 前缀 HTTEST_（兼容 -q 等前缀）
+# 假 uci: hometunnel.global.<opt> get/set/delete，get 读 env HTTEST_ 或状态文件，set 写状态文件
+USTATE="${HTTEST_UCI_STATE:-/tmp/ht-e2e-uci-state}"
 args=""
 for a in "$@"; do
 	case "$a" in
-		-*) ;;          # 忽略 flag
+		-*) ;;
 		*) args="$args $a" ;;
 	esac
 done
 set -- $args
+# uci set 两种形式: "uci set a.b.c=val"（$2 含等号）或 "uci set a.b.c val"（$3）
+key=$(echo "$2" | sed -n 's/^hometunnel\.global\.\([^=]*\)=.*/\1/p')
+[ -n "$key" ] || key=$(echo "$2" | sed 's/^hometunnel\.global\.//')
+val=$(echo "$2" | sed -n 's/^[^=]*=//p')
+[ -n "$val" ] || val="$3"
 case "$1" in
 	get)
-		key=$(echo "$2" | sed 's/^hometunnel\.global\.//')
-		eval "val=\${HTTEST_${key}:-}"
-		[ -n "$val" ] && echo "$val"
+		if [ -f "$USTATE" ] && grep -q "^$key=" "$USTATE" 2>/dev/null; then
+			sed -n "s/^$key=//p" "$USTATE" | tail -n1
+			exit 0
+		else
+			eval "val=\${HTTEST_${key}:-}"
+			if [ -n "$val" ]; then echo "$val"; exit 0; fi
+		fi
+		# 缺失 key 返回 rc=1（对齐真实 uci -q get，get_ 的默认值回退依赖此行为）
+		exit 1
+		;;
+	set)
+		echo "$key=$val" >> "$USTATE"
+		exit 0
+		;;
+	delete)
+		grep -v "^$key=" "$USTATE" > "$USTATE.tmp" 2>/dev/null && mv "$USTATE.tmp" "$USTATE"
 		exit 0
 		;;
 	*) exit 0 ;;
@@ -107,6 +126,7 @@ CTL_KEY="e2e-test-key-123"
 printf '%s' "$CTL_KEY" > "$FAKE_ROOT/etc/hometunnel/ctl.key"
 PORT_WORKER=18081
 PORT_METRICS=18082
+PORT_CF=18083
 cat > "$WORK/worker-server.mjs" <<EOF
 import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -266,6 +286,107 @@ WON=$(curl -fsS -H "x-ctl-key: $CTL_KEY" "http://127.0.0.1:$PORT_WORKER/cmd" 2>/
 [ "$WON" = "yes" ] && ok "worker /off synced (no flapping restart)" || bad "worker still on (flapping)"
 grep -q "hard cap" $TLOG && ok "cap logged" || bad "cap not logged"
 
+section "阶段6: tunnel 自愈（CF 侧删除/凭据丢失 → 重建）"
+kill "$LOOP_PID" 2>/dev/null; wait "$LOOP_PID" 2>/dev/null
+
+# 假 cloudflared: tunnel create 输出新 UUID 并落凭据文件; tunnel list/delete 记账
+cat > "$FAKE_ROOT/usr/bin/cloudflared" << 'CFOF'
+#!/bin/sh
+# CFDIR 由调用方 env 注入；吃掉 cf_run 固定添加的 --no-autoupdate
+while [ "$1" = "--no-autoupdate" ]; do shift; done
+case "$1 $2" in
+	"tunnel create")
+		NEWID="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+		echo "Created tunnel hometunnel with id $NEWID"
+		printf '{"AccountTag":"acct","TunnelSecret":"s1","TunnelID":"%s"}\n' "$NEWID" > "$CFDIR/$NEWID.json"
+		;;
+	"tunnel list")
+		if [ -f "$CFDIR/tunnels.json" ]; then cat "$CFDIR/tunnels.json"; else echo "[]"; fi
+		;;
+	"tunnel delete")
+		echo "Deleted tunnel $3"
+		;;
+	*) echo "fake cloudflared: $*" ;;
+esac
+CFOF
+chmod +x "$FAKE_ROOT/usr/bin/cloudflared"
+export CFDIR="$FAKE_ROOT/etc/hometunnel/.cloudflared"
+
+# 假 CF API: /accounts/<acct>/cfd_tunnel/<id> 按 FLAG 文件返回 200/404
+cat > "$WORK/cf-api-server.mjs" << 'EOF'
+import { createServer } from 'node:http';
+import { readFileSync } from 'node:fs';
+createServer((req, res) => {
+	const flag = (readFileSync(process.env.CF_FLAG, 'utf8') || '200').trim();
+	const code = parseInt(flag, 10);
+	if (req.url.includes('/cfd_tunnel/')) {
+		res.writeHead(code, { 'content-type': 'application/json' });
+		res.end(JSON.stringify({ success: code === 200 }));
+	} else {
+		res.writeHead(200); res.end('{}');
+	}
+}).listen(process.env.CF_PORT, '127.0.0.1');
+EOF
+CF_FLAG="$WORK/cf-state.flag"
+export CF_FLAG CF_PORT=$PORT_CF
+echo 200 > "$CF_FLAG"
+node "$WORK/cf-api-server.mjs" &
+CFPID=$!
+
+# hometunnel.sh 测试副本: 路径改写到 FAKE_ROOT, CF API 指向本地假服务
+OLDID="11111111-2222-3333-4444-555555555555"
+CFDIR="$FAKE_ROOT/etc/hometunnel/.cloudflared"
+mkdir -p "$CFDIR"
+printf '{"AccountTag":"acct","TunnelSecret":"s0","TunnelID":"%s"}\n' "$OLDID" > "$CFDIR/$OLDID.json"
+sed -e "s|^ETC=.*|ETC=$FAKE_ROOT/etc/hometunnel|" \
+    -e "s|^RUNDIR=.*|RUNDIR=$FAKE_ROOT/var/run/hometunnel|" \
+    -e "s|^SHARE=.*|SHARE=$FAKE_ROOT/usr/share/hometunnel|" \
+    -e "s|^CF=.*|CF=$FAKE_ROOT/usr/bin/cloudflared|" \
+    -e "s|^KEY_FILE=.*|KEY_FILE=$FAKE_ROOT/etc/hometunnel/ctl.key|" \
+    -e "s|/etc/init.d/hometunnel-ctl|$FAKE_ROOT/etc/init.d/hometunnel-ctl|g" \
+    -e "s|/etc/init.d/hometunnel$|$FAKE_ROOT/etc/init.d/hometunnel|g" \
+    -e "s|/etc/init.d/hometunnel |$FAKE_ROOT/etc/init.d/hometunnel |g" \
+    -e "s|https://api.cloudflare.com/client/v4|http://127.0.0.1:$PORT_CF|" \
+    files/usr/share/hometunnel/hometunnel.sh > "$WORK/ht-test.sh"
+chmod +x "$WORK/ht-test.sh"
+# 测试副本的 UCI 状态文件（隔离于全局默认）
+export HTTEST_UCI_STATE="$WORK/uci-state"
+: > "$HTTEST_UCI_STATE"
+
+# 假 cert.pem（cf_tunnel_state 解 token 用; token 内容指向假 account）
+TOKEN_JSON=$(printf '{"zoneID":"z0","accountID":"a0","apiToken":"tok"}' | base64 -w0 2>/dev/null || printf '{"zoneID":"z0","accountID":"a0","apiToken":"tok"}' | base64 | tr -d '\n')
+printf -- '-----BEGIN ARGO TUNNEL TOKEN-----\n%s\n-----END ARGO TUNNEL TOKEN-----\n' "$TOKEN_JSON" > "$FAKE_ROOT/etc/hometunnel/.cloudflared/cert.pem"
+
+# 6a. 正常态: CF 200 + 凭据在 → "already exists" 幂等
+echo 200 > "$CF_FLAG"
+export HTTEST_tunnel_id="$OLDID"
+OUT=$("$WORK/ht-test.sh" create 2>&1)
+echo "$OUT" | grep -q "already exists" && ok "6a idempotent when healthy" || bad "6a expected 'already exists', got: $OUT"
+
+# 6b. CF 侧删除（404）+ 凭据在 → 清理重建，tunnel_id 换新
+echo 404 > "$CF_FLAG"
+printf '%s\n' "$OLDID" > "$FAKE_ROOT/etc/hometunnel/tunnel-id.txt"  # 无关文件，仅为标记
+OUT=$("$WORK/ht-test.sh" create 2>&1)
+NEWID_CHK=$(cat "$FAKE_ROOT/etc/hometunnel/.cloudflared/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.json" 2>/dev/null | grep -c eeeeeeee)
+echo "$OUT" | grep -q "recreating\|cleared stale" && ok "6b recreates when CF-deleted" || bad "6b no recreate msg: $OUT"
+[ "$NEWID_CHK" -ge 1 ] && [ ! -f "$CFDIR/$OLDID.json" ] && ok "6b new creds + old creds removed" || bad "6b creds state wrong"
+
+# 6c. 本地凭据丢失 + CF 侧还在（200）→ 按名删除再重建
+rm -f "$CFDIR"/*.json
+printf '[{"name":"hometunnel","id":"%s"}]\n' "$OLDID" > "$CFDIR/tunnels.json"
+echo 200 > "$CF_FLAG"
+OUT=$("$WORK/ht-test.sh" create 2>&1)
+echo "$OUT" | grep -q "deleting stale tunnel" && ok "6c deletes stale before recreate" || bad "6c no stale-delete msg: $OUT"
+
+# 6d. check 子命令输出可解析
+echo 200 > "$CF_FLAG"
+OUT=$("$WORK/ht-test.sh" check 2>&1)
+echo "$OUT" | grep -q "cf-tunnel: exists" && ok "6d check reports exists" || bad "6d check unexpected: $OUT"
+echo 404 > "$CF_FLAG"
+OUT=$("$WORK/ht-test.sh" check 2>&1)
+echo "$OUT" | grep -q "cf-tunnel: missing" && ok "6d check reports missing" || bad "6d check unexpected: $OUT"
+
+kill $CFPID 2>/dev/null
 echo
 echo "===== e2e result: $pass passed, $fail failed ====="
 exit $([ "$fail" -eq 0 ] && echo 0 || echo 1)

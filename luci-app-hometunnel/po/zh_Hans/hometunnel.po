@@ -477,3 +477,30 @@ msgstr "⑥ 控制面 Worker"
 
 msgid "⑦ Verify & Finish"
 msgstr "⑦ 验证并完成"
+
+msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
+msgstr "Cloudflare 拒绝了已保存的证书。请重新执行向导第 ① 步重新授权。"
+
+msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
+msgstr "隧道已在 Cloudflare 侧被删除。重新运行向导（将自动重建）。"
+
+msgid "Tunnel on Cloudflare"
+msgstr "Cloudflare 侧隧道"
+
+msgid "certificate rejected"
+msgstr "证书被拒"
+
+msgid "deleted on Cloudflare"
+msgstr "已在 Cloudflare 删除"
+
+msgid "ok"
+msgstr "正常"
+
+msgid "unknown"
+msgstr "未知"
+
+msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
+msgstr "Cloudflare 拒绝了已保存的证书。请先重新执行第 ① 步。"
+
+msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
+msgstr "隧道已在 Cloudflare 侧被删除。点击下方“创建”将自动重建（新隧道 ID，第 ⑤ 步会重新发布 DNS 路由）。"

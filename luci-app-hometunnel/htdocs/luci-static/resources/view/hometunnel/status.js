@@ -39,6 +39,12 @@ function parseCtlJson(text) {
 	try { return JSON.parse(m[1]); } catch (e) { return null; }
 }
 
+/* 后端 status 的 cf-tunnel 行: exists|missing|auth-failed|unknown:* */
+function parseCfState(text) {
+	var m = (text || '').match(/cf-tunnel:\s+(\S+)/);
+	return m ? m[1] : '';
+}
+
 return view.extend({
 	load: function () {
 		/* uci.load 仅预载缓存；render 里用全局 uci.get() 读取 */
@@ -65,6 +71,7 @@ return view.extend({
 			var configured = !!uci.get('hometunnel', 'global', 'tunnel_id');
 
 			var ctlJson = parseCtlJson(backendStatus);
+			var cfState = parseCfState(backendStatus);
 
 			var container = E('div', {}, [
 				E('h2', {}, _('HomeTunnel')),
@@ -81,7 +88,17 @@ return view.extend({
 				return container;
 			}
 
-			/* ---- 状态表 ---- */
+			/* ---- CF 侧隧道异常横幅（被删/凭据失效）---- */
+		if (cfState === 'missing' || cfState === 'auth-failed') {
+			container.appendChild(E('div', { 'class': 'alert-message warning' }, [
+				E('p', {}, cfState === 'missing'
+					? _('The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically).')
+					: _('Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize.')),
+				E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Wizard'))
+			]));
+		}
+
+		/* ---- 状态表 ---- */
 			var label = function (ok, text) {
 				return E('span', { 'class': ok ? 'label success' : 'label' }, text || (ok ? _('running') : _('stopped')));
 			};
@@ -90,6 +107,14 @@ return view.extend({
 				E('tr', { 'class': 'tr' }, [
 					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Tunnel service'))),
 					E('td', { 'class': 'td left' }, label(tunnelRunning))
+				]),
+				E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Tunnel on Cloudflare'))),
+					E('td', { 'class': 'td left', 'id': 'ht-cf-state' }, E('span', { 'class': cfState === 'exists' ? 'label success' : 'label' },
+						cfState === 'exists' ? _('ok')
+						: cfState === 'missing' ? _('deleted on Cloudflare')
+						: cfState === 'auth-failed' ? _('certificate rejected')
+						: cfState ? cfState : _('unknown')))
 				]),
 				E('tr', { 'class': 'tr' }, [
 					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Mode'))),
@@ -177,7 +202,7 @@ return view.extend({
 
 			this.refreshLog(logDiv);
 
-			/* 定时刷新（控制面状态 + 日志），不整页重绘 */
+			/* 定时刷新（控制面状态 + 日志 + CF 状态），不整页重绘 */
 			var self = this;
 			poll.add(function () {
 				return Promise.all([
@@ -189,6 +214,16 @@ return view.extend({
 					if (stateEl) {
 						stateEl.innerHTML = '';
 						stateEl.appendChild(self.fmtCtlState(cj));
+					}
+					var cfEl = document.getElementById('ht-cf-state');
+					if (cfEl) {
+						cfEl.innerHTML = '';
+						var cfs = parseCfState(res[0]);
+						cfEl.appendChild(E('span', { 'class': cfs === 'exists' ? 'label success' : 'label' },
+							cfs === 'exists' ? _('ok')
+							: cfs === 'missing' ? _('deleted on Cloudflare')
+							: cfs === 'auth-failed' ? _('certificate rejected')
+							: cfs ? cfs : _('unknown')));
 					}
 					var logText = (res[1].stdout || '').trim().split('\n');
 					logDiv.textContent = logText.slice(-15).join('\n') || _('(empty)');

@@ -139,16 +139,49 @@ cmd_login() {
 }
 
 cmd_create() {
-	local name id creds out
+	local name id creds out state
 	name=$(get_ tunnel_name hometunnel)
 	mkdir -p "$ETC/.cloudflared"
 	chmod 700 "$ETC/.cloudflared"
 
-	# 幂等: 已有 tunnel_id 则校验凭据存在
 	id=$(get_ tunnel_id '')
-	if [ -n "$id" ] && [ -f "$ETC/.cloudflared/$id.json" ]; then
-		msg "OK: tunnel already exists (id=$id)"
-		return 0
+
+	# ---- 自愈分支: CF 侧已删 / 本地凭据丢失 → 清理后重建 ----
+	if [ -n "$id" ]; then
+		if [ ! -f "$ETC/.cloudflared/$id.json" ]; then
+			# 本地凭据丢失（或隧道在 CF 侧被刷新令牌后凭据失效）:
+			# CF 侧若还存在，先删掉再重建（凭据无法重新下载，重建是唯一恢复路径）
+			state=$(cf_tunnel_state "$id")
+			msg "credentials file missing; CF state: $state"
+			case "$state" in
+				exists|unknown:*)
+					# 不能确认 CF 侧状态时不盲删——保守处理: 按同名查找并删除
+					out=$(cf_run tunnel list -o json 2>/dev/null | grep -oE "\"name\":\"$name\"[^}]*\"id\":\"[0-9a-f-]{36}\"" | grep -oE '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -n1)
+					if [ -n "$out" ]; then
+						msg "deleting stale tunnel '$name' ($out) before recreate"
+						cf_run tunnel delete -f "$out" 2>&1 | grep -v '^$' || true
+					fi
+					;;
+				missing|auth-failed)
+					# CF 侧确认已删（或 cert 失效，tunnel create 会失败并提示）
+					;;
+			esac
+			rm -f "$ETC/.cloudflared/$id.json"
+			uci -q delete "$UCI_CONF.global.tunnel_id"
+			uci commit "$UCI_CONF"
+			rm -f "$RUNDIR/dns-routed" "$RUNDIR/worker-verified" "$RUNDIR/worker-deployed"
+			msg "cleared stale tunnel state (old id: $id) — recreating"
+		elif [ "$(cf_tunnel_state "$id")" = "missing" ]; then
+			# 隧道在 CF 侧被删除: 旧凭据已是孤儿，重建
+			rm -f "$ETC/.cloudflared/$id.json"
+			uci -q delete "$UCI_CONF.global.tunnel_id"
+			uci commit "$UCI_CONF"
+			rm -f "$RUNDIR/dns-routed" "$RUNDIR/worker-verified" "$RUNDIR/worker-deployed"
+			msg "tunnel $id was deleted on Cloudflare — recreating"
+		else
+			msg "OK: tunnel already exists (id=$id)"
+			return 0
+		fi
 	fi
 
 	out=$(cf_run tunnel create "$name" 2>&1) || die "tunnel create failed: $out"
@@ -161,6 +194,8 @@ cmd_create() {
 	chmod 600 "$ETC/.cloudflared/cert.pem" 2>/dev/null
 	uci set "$UCI_CONF.global.tunnel_id=$id"
 	uci commit "$UCI_CONF"
+	# 重建后旧 config.yml 指向旧凭据，直接重生成；数据面在跑则平滑重启
+	[ -f "$ETC/config.yml" ] && cmd_regen
 	msg "OK: tunnel '$name' created (id=$id)"
 }
 
@@ -302,13 +337,60 @@ cmd_status() {
 		resp=$(curl -fsS --max-time 8 -H "x-ctl-key: $(cat "$KEY_FILE")" "$base/cmd" 2>/dev/null) \
 			&& echo "control:     $resp" || echo "control:     unreachable"
 	fi
+	# CF 侧 tunnel 存在性（cert.pem token）
+	if [ -n "$tunnel_id" ]; then
+		echo "cf-tunnel:   $(cf_tunnel_state "$tunnel_id")"
+	fi
 }
 
-# 从 cert.pem 的 ARGO TUNNEL TOKEN 解出 apiToken（cfut_…，可调 CF API v4）
-cert_api_token() {
+# 从 cert.pem 的 ARGO TUNNEL TOKEN 解出 JSON 字段（apiToken/accountID/zoneID）
+cert_json_field() {
 	awk '/BEGIN ARGO TUNNEL TOKEN/{f=1;next} /END ARGO TUNNEL TOKEN/{f=0} f' \
 		"$ETC/.cloudflared/cert.pem" 2>/dev/null | tr -d '\n' | base64 -d 2>/dev/null \
-		| grep -oE '"apiToken":"[^"]+"' | cut -d'"' -f4
+		| grep -oE "\"$1\":\"[^\"]+\"" | cut -d'"' -f4
+}
+
+cert_api_token() { cert_json_field apiToken; }
+
+# 查询 tunnel 在 CF 侧的存在性（cert.pem apiToken 调 API v4）。
+# 输出: exists | missing | auth-failed | unknown:<reason>
+cf_tunnel_state() {
+	local token acct id http
+	id="${1:-$(get_ tunnel_id '')}"
+	[ -n "$id" ] || { echo "unknown:no-tunnel-id"; return; }
+	[ -f "$ETC/.cloudflared/cert.pem" ] || { echo "unknown:no-cert"; return; }
+	token=$(cert_api_token)
+	acct=$(cert_json_field accountID)
+	[ -n "$token" ] && [ -n "$acct" ] || { echo "unknown:bad-cert"; return; }
+	http=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 \
+		-H "Authorization: Bearer $token" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/cfd_tunnel/$id" 2>/dev/null)
+	case "$http" in
+		200)   echo "exists" ;;
+		404)   echo "missing" ;;
+		401|403) echo "auth-failed" ;;
+		*)     echo "unknown:http-$http" ;;
+	esac
+}
+
+# check — 校验本地 tunnel_id 与 CF 侧一致性（人读 + 向导可解析）
+cmd_check() {
+	local state
+	state=$(cf_tunnel_state)
+	msg "cf-tunnel: $state"
+	case "$state" in
+		exists)
+			return 0 ;;
+		missing)
+			msg "tunnel was deleted on Cloudflare — run 'create' to recreate it"
+			return 1 ;;
+		auth-failed)
+			msg "cert.pem token rejected — re-run wizard step 1 (cloudflared tunnel login)"
+			return 1 ;;
+		*)
+			msg "cannot verify: $state"
+			return 2 ;;
+	esac
 }
 
 # 列出账户全部 zone（域名）。输出: <name> <status> 每行一个；失败 die。
@@ -390,6 +472,7 @@ case "${1:-}" in
 	verify)     cmd_verify ;;
 	ctl)        shift; cmd_ctl "$@" ;;
 	status)     cmd_status ;;
+	check)      cmd_check ;;
 	zones)      cmd_zones ;;
 	cleanup)    cmd_cleanup ;;
 	apply-mode) cmd_apply_mode ;;
@@ -409,6 +492,7 @@ usage: hometunnel.sh <command>
   verify                verify control plane (healthz + /cmd)
   ctl on|off            turn tunnel on/off from the router side (LuCI buttons)
   status                human-readable status
+  check                 verify tunnel_id against Cloudflare (via cert.pem token)
   zones                 list all Cloudflare zones (domains) via cert.pem token
   cleanup               delete tunnel + local cleanup
   apply-mode            apply UCI mode to init enable states
