@@ -41,6 +41,9 @@ tunnel: $tunnel_id
 credentials-file: $creds
 EOF
 
+# 首个规则前需要 ingress: 键（否则 YAML 结构非法）
+INGRESS_KEY_WRITTEN=0
+
 count=0
 i=0
 while uci -q show hometunnel 2>/dev/null | grep -q "^hometunnel.@ingress\[$i\]="; do
@@ -63,7 +66,7 @@ while uci -q show hometunnel 2>/dev/null | grep -q "^hometunnel.@ingress\[$i\]="
 
 		hostname="${subdomain}.${domain}"
 		{
-			echo ""
+			[ "$INGRESS_KEY_WRITTEN" -eq 0 ] && { echo ""; echo "ingress:"; INGRESS_KEY_WRITTEN=1; }
 			echo "  # $name"
 			echo "  - hostname: $hostname"
 			[ -n "$path" ] && echo "    path: '$path'"

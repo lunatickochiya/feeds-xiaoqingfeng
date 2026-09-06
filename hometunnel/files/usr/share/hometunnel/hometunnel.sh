@@ -68,13 +68,21 @@ job_start() {
 	rm -f "$RUNDIR/$name.rc" "$RUNDIR/$name.out"
 	: > "$RUNDIR/$name.out"
 	chmod 600 "$RUNDIR/$name.out"
-	# setsid 脱离 rpcd 进程组（前端会话结束后 job 继续跑）
-	setsid nohup sh -c '
-		set -u
-		name=$1; shift
-		"$@" > "'"$RUNDIR"'/$name.out" 2>&1
-		echo $? > "'"$RUNDIR"'/$name.rc"
-	' _ "$name" "$@" >/dev/null 2>&1 &
+	# setsid 脱离 rpcd 会话进程组（登录会话结束 job 不被杀）；无 setsid（busybox 未编）降级 nohup
+	# 两分支统一参数序: _ <name> <rundir> <cmd...>；内部先取 name/rundir 再 shift 2 还原 "$@"
+	if command -v setsid >/dev/null 2>&1; then
+		setsid nohup sh -c '
+			name=$1; rundir=$2; shift 2
+			"$@" > "$rundir/$name.out" 2>&1
+			echo $? > "$rundir/$name.rc"
+		' _ "$name" "$RUNDIR" "$@" >/dev/null 2>&1 &
+	else
+		nohup sh -c '
+			name=$1; rundir=$2; shift 2
+			"$@" > "$rundir/$name.out" 2>&1
+			echo $? > "$rundir/$name.rc"
+		' _ "$name" "$RUNDIR" "$@" >/dev/null 2>&1 &
+	fi
 	echo $! > "$RUNDIR/$name.pid"
 	msg "job '$name' started (pid $(cat "$RUNDIR/$name.pid"))"
 }
