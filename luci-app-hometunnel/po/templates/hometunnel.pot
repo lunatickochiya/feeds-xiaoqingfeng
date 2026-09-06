@@ -1,0 +1,325 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "(empty)"
+msgstr ""
+
+msgid "(log unavailable)"
+msgstr ""
+
+msgid "Add at least one service to expose. Continue in the Ingress Rules page, then come back."
+msgstr ""
+
+msgid "All checks passed. Daemon enabled. Opening status page…"
+msgstr ""
+
+msgid "Authorized! Loading next step…"
+msgstr ""
+
+msgid "Auto-renew amount (min)"
+msgstr ""
+
+msgid "Auto-renew while in use"
+msgstr ""
+
+msgid "Bookmarks (phone)"
+msgstr ""
+
+msgid "Bundle ready — download below"
+msgstr ""
+
+msgid "Connect timeout (s)"
+msgstr ""
+
+msgid "Control daemon"
+msgstr ""
+
+msgid "Control plane state"
+msgstr ""
+
+msgid "Control plane: %s"
+msgstr ""
+
+msgid "Control-plane subdomain"
+msgstr ""
+
+msgid "Copy OFF url"
+msgstr ""
+
+msgid "Copy ON url"
+msgstr ""
+
+msgid "Create Tunnel"
+msgstr ""
+
+msgid "Create the tunnel on your Cloudflare account (uses the authorization from step ①)."
+msgstr ""
+
+msgid "Created! Loading next step…"
+msgstr ""
+
+msgid "Default TTL (min)"
+msgstr ""
+
+msgid "Domain"
+msgstr ""
+
+msgid "Done! Reloading…"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. "
+msgstr ""
+
+msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
+msgstr ""
+
+msgid "Edge protocol"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Fail-closed threshold"
+msgstr ""
+
+msgid "Failed: %s"
+msgstr ""
+
+msgid "Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare)."
+msgstr ""
+
+msgid "General"
+msgstr ""
+
+msgid "Generate Bundle"
+msgstr ""
+
+msgid "Hard cap (seconds)"
+msgstr ""
+
+msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
+msgstr ""
+
+msgid "HomeTunnel"
+msgstr ""
+
+msgid "HomeTunnel Wizard"
+msgstr ""
+
+msgid "HomeTunnel — Ingress Rules"
+msgstr ""
+
+msgid "HomeTunnel — Settings"
+msgstr ""
+
+msgid "How long the tunnel stays open after \"on\". Worker /on?min= can override up to the max."
+msgstr ""
+
+msgid "I've deployed — Continue"
+msgstr ""
+
+msgid "Local Prometheus metrics port of cloudflared (traffic signal for auto-renew)."
+msgstr ""
+
+msgid "Local fuse: force-stop after this many seconds of continuous run; renewals do NOT extend it. 0 = unlimited (not recommended with auto-renew)."
+msgstr ""
+
+msgid "Max TTL (min)"
+msgstr ""
+
+msgid "Mode"
+msgstr ""
+
+msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
+msgstr ""
+
+msgid "Mode: <code>%s</code> — change it later in Settings."
+msgstr ""
+
+msgid "Name"
+msgstr ""
+
+msgid "On your computer: <code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
+msgstr ""
+
+msgid "On-demand parameters"
+msgstr ""
+
+msgid "Open Ingress Rules"
+msgstr ""
+
+msgid "Open Wizard"
+msgstr ""
+
+msgid "Open it on any device, log into Cloudflare, pick your domain and authorize."
+msgstr ""
+
+msgid "Optional. Only forward matching paths, e.g. <code>^/api(/.*)?$</code>"
+msgstr ""
+
+msgid "Optional. Rewrite the Host header sent to the origin (needed behind a name-based reverse proxy)."
+msgstr ""
+
+msgid "Origin Host header"
+msgstr ""
+
+msgid "Path regex"
+msgstr ""
+
+msgid "Please wait…"
+msgstr ""
+
+msgid "Poll interval (s)"
+msgstr ""
+
+msgid "Publish DNS"
+msgstr ""
+
+msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
+msgstr ""
+
+msgid "QUIC is default; switch to http2 if UDP 7844 is degraded/blocked on your line."
+msgstr ""
+
+msgid "Recent daemon log"
+msgstr ""
+
+msgid "Remote on/off"
+msgstr ""
+
+msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
+msgstr ""
+
+msgid "Save these as browser bookmarks on your phone to open/close the tunnel from anywhere:"
+msgstr ""
+
+msgid "Service URL"
+msgstr ""
+
+msgid "Services"
+msgstr ""
+
+msgid "Setup is not complete. Run the wizard first."
+msgstr ""
+
+msgid "Skip TLS verify"
+msgstr ""
+
+msgid "Skip certificate verification for https origins (self-signed certs)."
+msgstr ""
+
+msgid "Some rules failed — check output above"
+msgstr ""
+
+msgid "Start Login"
+msgstr ""
+
+msgid "Stop the tunnel after this many consecutive control-plane fetch failures."
+msgstr ""
+
+msgid "Subdomain"
+msgstr ""
+
+msgid "TTL remaining: %d min"
+msgstr ""
+
+msgid "The router runs <code>cloudflared tunnel login</code> and shows an authorization URL. "
+msgstr ""
+
+msgid "This deploys the control-plane Worker to <code>%s.%s</code> (custom domain, free tier)."
+msgstr ""
+
+msgid "Tunnel name"
+msgstr ""
+
+msgid "Tunnel service"
+msgstr ""
+
+msgid "Turn Off"
+msgstr ""
+
+msgid "Turn On (%d min)"
+msgstr ""
+
+msgid "Unmatched hostnames/paths always return 404."
+msgstr ""
+
+msgid "Verify"
+msgstr ""
+
+msgid "Verify the control plane from the router, then enable the daemon and go to the status page."
+msgstr ""
+
+msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
+msgstr ""
+
+msgid "always-on"
+msgstr ""
+
+msgid "auto-renewed"
+msgstr ""
+
+msgid "cloudflared metrics port"
+msgstr ""
+
+msgid "cloudflared service syntax, e.g. <code>http://192.168.1.10:5000</code>, <code>ssh://192.168.1.10:22</code>, <code>tcp://…</code>"
+msgstr ""
+
+msgid "done"
+msgstr ""
+
+msgid "failed"
+msgstr ""
+
+msgid "loading…"
+msgstr ""
+
+msgid "off"
+msgstr ""
+
+msgid "on"
+msgstr ""
+
+msgid "on-demand (Worker controlled)"
+msgstr ""
+
+msgid "on-demand (recommended)"
+msgstr ""
+
+msgid "on-demand: tunnel closed by default, opened from outside via the Worker control plane. always-on: tunnel connected at boot."
+msgstr ""
+
+msgid "running"
+msgstr ""
+
+msgid "stopped"
+msgstr ""
+
+msgid "unreachable"
+msgstr ""
+
+msgid "waiting for auth URL…"
+msgstr ""
+
+msgid "① Cloudflare Authorization"
+msgstr ""
+
+msgid "② Create Tunnel"
+msgstr ""
+
+msgid "③ Ingress Rules"
+msgstr ""
+
+msgid "④ Publish DNS"
+msgstr ""
+
+msgid "⑤ Control-plane Worker"
+msgstr ""
+
+msgid "⑥ Verify & Finish"
+msgstr ""

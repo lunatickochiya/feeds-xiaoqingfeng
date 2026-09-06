@@ -1,0 +1,32 @@
+# hometunnel — HomeLede Cloudflare Tunnel 内网穿透
+# 引导向导完成后主要字段自动填充；本文件不含任何密钥（密钥在 /etc/hometunnel/，600）
+
+config hometunnel 'global'
+	option enabled '1'
+	# ondemand: Worker 控制面按需启停（默认）；alwayson: 常驻
+	option mode 'ondemand'
+	option tunnel_name 'hometunnel'
+	option tunnel_id ''
+	option domain ''
+	option ctl_hostname 'ctl'
+	option poll_interval '10'
+	option fail_threshold '3'
+	# 本地硬熔断（秒）。续期启用后这是唯一绝对运行上限；0 = 不限
+	option hard_cap '14400'
+	option default_ttl '45'
+	option max_ttl '240'
+	# 使用中自动续期: cloudflared metrics 有真实流量 → beat 给控制面续 TTL
+	option auto_renew '1'
+	option renew_ttl '45'
+	option metrics_port '20241'
+	option protocol 'auto'
+
+# config ingress
+# 	option name 'nas'
+# 	option subdomain 'nas'
+# 	option service 'http://192.168.1.10:5000'
+# 	option path ''
+# 	option http_host_header ''
+# 	option no_tls_verify '0'
+# 	option connect_timeout '30'
+# 	option enabled '1'

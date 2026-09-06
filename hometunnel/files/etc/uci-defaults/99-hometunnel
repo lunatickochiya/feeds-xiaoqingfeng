@@ -1,0 +1,10 @@
+#!/bin/sh
+# hometunnel uci-defaults: 建立凭据目录（700，密钥文件均 600）
+
+[ -d /etc/hometunnel ] || mkdir -p /etc/hometunnel
+chmod 700 /etc/hometunnel
+
+# ondemand 模式: 数据面不随开机自启（只被守护拉起），控制面守护启用
+/etc/init.d/hometunnel disable 2>/dev/null
+
+exit 0

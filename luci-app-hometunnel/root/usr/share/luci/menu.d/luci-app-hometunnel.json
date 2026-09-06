@@ -1,0 +1,45 @@
+{
+	"admin/services/hometunnel": {
+		"title": "HomeTunnel",
+		"order": 90,
+		"action": {
+			"type": "firstchild"
+		},
+		"depends": {
+			"acl": [ "luci-app-hometunnel" ],
+			"uci": { "hometunnel": true }
+		}
+	},
+	"admin/services/hometunnel/status": {
+		"title": "Status",
+		"order": 10,
+		"action": {
+			"type": "view",
+			"path": "hometunnel/status"
+		}
+	},
+	"admin/services/hometunnel/wizard": {
+		"title": "Wizard",
+		"order": 20,
+		"action": {
+			"type": "view",
+			"path": "hometunnel/wizard"
+		}
+	},
+	"admin/services/hometunnel/ingress": {
+		"title": "Ingress Rules",
+		"order": 30,
+		"action": {
+			"type": "view",
+			"path": "hometunnel/ingress"
+		}
+	},
+	"admin/services/hometunnel/settings": {
+		"title": "Settings",
+		"order": 40,
+		"action": {
+			"type": "view",
+			"path": "hometunnel/settings"
+		}
+	}
+}

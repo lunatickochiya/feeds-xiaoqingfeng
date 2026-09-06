@@ -1,0 +1,30 @@
+{
+	"luci-app-hometunnel": {
+		"description": "Grant access to hometunnel (Cloudflare Tunnel manager)",
+		"read": {
+			"uci": [ "hometunnel" ],
+			"ubus": {
+				"service": [ "list" ]
+			},
+			"file": {
+				"/etc/hometunnel/*": [ "read" ],
+				"/var/run/hometunnel/*": [ "read" ],
+				"/tmp/hometunnel-worker-*.tar.gz": [ "read" ],
+				"/usr/bin/cloudflared": [ "read" ],
+				"/usr/share/hometunnel/hometunnel.sh status": [ "exec" ],
+				"/usr/share/hometunnel/hometunnel.sh jobstatus *": [ "exec" ],
+				"/sbin/logread": [ "exec" ]
+			}
+		},
+		"write": {
+			"uci": [ "hometunnel" ],
+			"file": {
+				"/etc/hometunnel/*": [ "write" ],
+				"/var/run/hometunnel/*": [ "write" ],
+				"/usr/share/hometunnel/hometunnel.sh *": [ "exec" ],
+				"/etc/init.d/hometunnel": [ "exec" ],
+				"/etc/init.d/hometunnel-ctl": [ "exec" ]
+			}
+		}
+	}
+}

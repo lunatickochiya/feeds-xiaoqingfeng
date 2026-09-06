@@ -1,0 +1,51 @@
+#!/bin/sh /etc/rc.common
+# hometunnel-ctl — 控制面守护：轮询 Cloudflare Worker，按需启停 hometunnel 数据面
+# 仅 ondemand 模式有意义（start_service 里守卫，其他模式直接拒绝启动）。
+# 核心语义（继承 AI-X-Space/llm-ondemand-tunnel v2）:
+#   fail-closed: /cmd 连续 fail_threshold 次拉取失败 → 停隧道（宁可关，不可失控）
+#   hard_cap:    本地硬熔断，on_since 只在隧道真正启动时写，续期不穿透
+#   auto_renew:  cloudflared metrics 有真实流量 → /cmd/beat 续 Worker TTL
+
+USE_PROCD=1
+START=98
+STOP=22
+
+NAME=hometunnel-ctl
+LOOP=/usr/share/hometunnel/ctl-loop.sh
+
+start_service() {
+	config_load hometunnel
+
+	local enabled mode tunnel_id domain
+	config_get_bool enabled global enabled 1
+	config_get mode global mode ondemand
+	config_get tunnel_id global tunnel_id ''
+	config_get domain global domain ''
+
+	[ "$enabled" -eq 1 ] || {
+		logger -t "$NAME" "disabled in UCI, refusing to start"
+		return 1
+	}
+	[ "$mode" = "ondemand" ] || {
+		logger -t "$NAME" "mode=$mode (ctl daemon is ondemand-only), refusing to start"
+		return 1
+	}
+	[ -n "$tunnel_id" ] && [ -n "$domain" ] || {
+		logger -t "$NAME" "wizard incomplete (tunnel_id/domain missing), refusing to start"
+		return 1
+	}
+	[ -f /etc/hometunnel/ctl.key ] || {
+		logger -t "$NAME" "/etc/hometunnel/ctl.key missing, refusing to start"
+		return 1
+	}
+
+	procd_open_instance "$NAME"
+	procd_set_param command /bin/sh "$LOOP"
+	procd_set_param respawn 3600 5 0
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
+service_triggers() {
+	procd_add_reload_trigger hometunnel
+}

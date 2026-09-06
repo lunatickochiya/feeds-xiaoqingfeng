@@ -1,0 +1,326 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: zh_Hans\n"
+
+msgid "(empty)"
+msgstr "（空）"
+
+msgid "(log unavailable)"
+msgstr "（日志不可用）"
+
+msgid "Add at least one service to expose. Continue in the Ingress Rules page, then come back."
+msgstr "至少添加一个要暴露的服务。请继续在内网服务规则页面添加，然后回到这里。"
+
+msgid "All checks passed. Daemon enabled. Opening status page…"
+msgstr "全部通过。守护已启用。正在打开状态页…"
+
+msgid "Authorized! Loading next step…"
+msgstr "授权成功！正在进入下一步…"
+
+msgid "Auto-renew amount (min)"
+msgstr "自动续期幅度（分钟）"
+
+msgid "Auto-renew while in use"
+msgstr "使用中自动续期"
+
+msgid "Bookmarks (phone)"
+msgstr "书签（手机）"
+
+msgid "Bundle ready — download below"
+msgstr "部署包已生成——点击下方下载"
+
+msgid "Connect timeout (s)"
+msgstr "连接超时（秒）"
+
+msgid "Control daemon"
+msgstr "控制守护进程"
+
+msgid "Control plane state"
+msgstr "控制面状态"
+
+msgid "Control plane: %s"
+msgstr "控制面：%s"
+
+msgid "Control-plane subdomain"
+msgstr "控制面子域名"
+
+msgid "Copy OFF url"
+msgstr "复制关闭链接"
+
+msgid "Copy ON url"
+msgstr "复制开启链接"
+
+msgid "Create Tunnel"
+msgstr "创建隧道"
+
+msgid "Create the tunnel on your Cloudflare account (uses the authorization from step ①)."
+msgstr "在你的 Cloudflare 账号上创建隧道（使用步骤 ① 的授权）。"
+
+msgid "Created! Loading next step…"
+msgstr "创建成功！正在进入下一步…"
+
+msgid "Default TTL (min)"
+msgstr "默认 TTL（分钟）"
+
+msgid "Domain"
+msgstr "域名"
+
+msgid "Done! Reloading…"
+msgstr "完成！正在刷新…"
+
+msgid "Download"
+msgstr "下载"
+
+msgid "Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. "
+msgstr "下载部署包，在有 Node.js 的电脑上解压并运行 <code>./deploy.sh</code>。"
+
+msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
+msgstr "每条规则通过隧道暴露一个内网服务，域名形如 <code>子域.域名</code>。"
+
+msgid "Edge protocol"
+msgstr "边缘协议"
+
+msgid "Enabled"
+msgstr "启用"
+
+msgid "Fail-closed threshold"
+msgstr "fail-closed 阈值"
+
+msgid "Failed: %s"
+msgstr "失败：%s"
+
+msgid "Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare)."
+msgstr "全免费 Cloudflare Tunnel 配置。你需要：一个 Cloudflare 账号和一个 NS 托管在 Cloudflare 的域名。"
+
+msgid "General"
+msgstr "基本设置"
+
+msgid "Generate Bundle"
+msgstr "生成部署包"
+
+msgid "Hard cap (seconds)"
+msgstr "硬熔断（秒）"
+
+msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
+msgstr "HomeLede 基于 Cloudflare Tunnel 的全免费内网穿透。"
+
+msgid "HomeTunnel"
+msgstr "HomeTunnel"
+
+msgid "HomeTunnel Wizard"
+msgstr "HomeTunnel 设置向导"
+
+msgid "HomeTunnel — Ingress Rules"
+msgstr "HomeTunnel — 内网服务规则"
+
+msgid "HomeTunnel — Settings"
+msgstr "HomeTunnel — 设置"
+
+msgid "How long the tunnel stays open after \"on\". Worker /on?min= can override up to the max."
+msgstr "“开启”后隧道保持打开的时长。Worker /on?min= 可覆盖，最大不超过上限。"
+
+msgid "I've deployed — Continue"
+msgstr "我已部署——继续"
+
+msgid "Local Prometheus metrics port of cloudflared (traffic signal for auto-renew)."
+msgstr "cloudflared 本地 Prometheus 指标端口（自动续期的流量信号源）。"
+
+msgid "Local fuse: force-stop after this many seconds of continuous run; renewals do NOT extend it. 0 = unlimited (not recommended with auto-renew)."
+msgstr "本地熔断：连续运行超过该秒数强制停止，续期不会延长它。0 = 不限（开启自动续期时不建议）。"
+
+msgid "Max TTL (min)"
+msgstr "最大 TTL（分钟）"
+
+msgid "Mode"
+msgstr "模式"
+
+msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
+msgstr "模式与守护参数。TTL 族参数会固化进 Worker 部署包——修改后需重新生成并重新部署。"
+
+msgid "Mode: <code>%s</code> — change it later in Settings."
+msgstr "模式：<code>%s</code>——之后可在设置中更改。"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "On your computer: <code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
+msgstr "在你的电脑上：<code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
+
+msgid "On-demand parameters"
+msgstr "按需模式参数"
+
+msgid "Open Ingress Rules"
+msgstr "打开内网服务规则"
+
+msgid "Open Wizard"
+msgstr "打开向导"
+
+msgid "Open it on any device, log into Cloudflare, pick your domain and authorize."
+msgstr "在任意设备打开它，登录 Cloudflare，选择你的域名并授权。"
+
+msgid "Optional. Only forward matching paths, e.g. <code>^/api(/.*)?$</code>"
+msgstr "可选。仅转发匹配的路径，如 <code>^/api(/.*)?$</code>"
+
+msgid "Optional. Rewrite the Host header sent to the origin (needed behind a name-based reverse proxy)."
+msgstr "可选。改写发往源站的 Host 头（源站在基于域名的反代后面时需要）。"
+
+msgid "Origin Host header"
+msgstr "回源 Host 头"
+
+msgid "Path regex"
+msgstr "路径正则"
+
+msgid "Please wait…"
+msgstr "请稍候…"
+
+msgid "Poll interval (s)"
+msgstr "轮询间隔（秒）"
+
+msgid "Publish DNS"
+msgstr "发布 DNS"
+
+msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
+msgstr "为每条启用的规则发布 CNAME <子域.域名> → 隧道（使用 cert.pem，无需 API Token）。"
+
+msgid "QUIC is default; switch to http2 if UDP 7844 is degraded/blocked on your line."
+msgstr "默认 QUIC；线路 UDP 7844 劣化/受阻时切 http2。"
+
+msgid "Recent daemon log"
+msgstr "最近守护日志"
+
+msgid "Remote on/off"
+msgstr "远程开 / 关"
+
+msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
+msgstr "临近 TTL 到期且检测到真实流量时，每次续期的时长（使用中自动续期）。"
+
+msgid "Save these as browser bookmarks on your phone to open/close the tunnel from anywhere:"
+msgstr "保存为手机浏览器书签，随时随地开关隧道："
+
+msgid "Service URL"
+msgstr "服务地址"
+
+msgid "Services"
+msgstr "服务列表"
+
+msgid "Setup is not complete. Run the wizard first."
+msgstr "配置尚未完成，请先运行向导。"
+
+msgid "Skip TLS verify"
+msgstr "跳过 TLS 校验"
+
+msgid "Skip certificate verification for https origins (self-signed certs)."
+msgstr "对 https 源站跳过证书校验（自签名证书）。"
+
+msgid "Some rules failed — check output above"
+msgstr "部分规则失败——请检查上方输出"
+
+msgid "Start Login"
+msgstr "开始授权"
+
+msgid "Stop the tunnel after this many consecutive control-plane fetch failures."
+msgstr "控制面连续拉取失败该次数后停止隧道。"
+
+msgid "Subdomain"
+msgstr "子域名"
+
+msgid "TTL remaining: %d min"
+msgstr "TTL 剩余：%d 分钟"
+
+msgid "The router runs <code>cloudflared tunnel login</code> and shows an authorization URL. "
+msgstr "路由器将运行 <code>cloudflared tunnel login</code> 并显示授权 URL。"
+
+msgid "This deploys the control-plane Worker to <code>%s.%s</code> (custom domain, free tier)."
+msgstr "将控制面 Worker 部署到 <code>%s.%s</code>（自定义域，免费额度）。"
+
+msgid "Tunnel name"
+msgstr "隧道名称"
+
+msgid "Tunnel service"
+msgstr "隧道服务"
+
+msgid "Turn Off"
+msgstr "关闭"
+
+msgid "Turn On (%d min)"
+msgstr "开启（%d 分钟）"
+
+msgid "Unmatched hostnames/paths always return 404."
+msgstr "未匹配的主机名/路径一律返回 404。"
+
+msgid "Verify"
+msgstr "验证"
+
+msgid "Verify the control plane from the router, then enable the daemon and go to the status page."
+msgstr "从路由器侧验证控制面，然后启用守护并进入状态页。"
+
+msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
+msgstr "隧道有真实流量（新请求/活跃流）时持续续期 TTL；闲置则到期自动关闭。"
+
+msgid "always-on"
+msgstr "常驻"
+
+msgid "auto-renewed"
+msgstr "已自动续期"
+
+msgid "cloudflared metrics port"
+msgstr "cloudflared metrics 端口"
+
+msgid "cloudflared service syntax, e.g. <code>http://192.168.1.10:5000</code>, <code>ssh://192.168.1.10:22</code>, <code>tcp://…</code>"
+msgstr "cloudflared 服务语法，如 <code>http://192.168.1.10:5000</code>、<code>ssh://192.168.1.10:22</code>、<code>tcp://…</code>"
+
+msgid "done"
+msgstr "完成"
+
+msgid "failed"
+msgstr "失败"
+
+msgid "loading…"
+msgstr "加载中…"
+
+msgid "off"
+msgstr "关闭"
+
+msgid "on"
+msgstr "开启"
+
+msgid "on-demand (Worker controlled)"
+msgstr "按需（Worker 控制）"
+
+msgid "on-demand (recommended)"
+msgstr "按需（推荐）"
+
+msgid "on-demand: tunnel closed by default, opened from outside via the Worker control plane. always-on: tunnel connected at boot."
+msgstr "按需：隧道默认关闭，由 Worker 控制面从外网开启。常驻：开机即连接。"
+
+msgid "running"
+msgstr "运行中"
+
+msgid "stopped"
+msgstr "已停止"
+
+msgid "unreachable"
+msgstr "不可达"
+
+msgid "waiting for auth URL…"
+msgstr "等待授权 URL…"
+
+msgid "① Cloudflare Authorization"
+msgstr "① Cloudflare 授权"
+
+msgid "② Create Tunnel"
+msgstr "② 创建隧道"
+
+msgid "③ Ingress Rules"
+msgstr "③ 内网服务规则"
+
+msgid "④ Publish DNS"
+msgstr "④ 发布 DNS"
+
+msgid "⑤ Control-plane Worker"
+msgstr "⑤ 控制面 Worker"
+
+msgid "⑥ Verify & Finish"
+msgstr "⑥ 验证并完成"
