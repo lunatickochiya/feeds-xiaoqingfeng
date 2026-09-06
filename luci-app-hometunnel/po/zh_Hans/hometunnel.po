@@ -441,3 +441,39 @@ msgstr "接入规则"
 
 msgid "Settings"
 msgstr "设置"
+
+msgid "Fetch Domains"
+msgstr "获取域名列表"
+
+msgid "Fix the issue (e.g. router DNS), reload this page and try again."
+msgstr "修复问题（如路由器 DNS）后刷新本页重试。"
+
+msgid "Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account)."
+msgstr "选择隧道主机名所用的域名（自动从你的 Cloudflare 账户获取）。"
+
+msgid "Refetch"
+msgstr "重新获取"
+
+msgid "Save Domain"
+msgstr "保存域名"
+
+msgid "Saved! Loading next step…"
+msgstr "已保存！正在进入下一步…"
+
+msgid "cloudflared exited before the certificate was fetched:"
+msgstr "证书尚未拉取，cloudflared 已退出："
+
+msgid "③ Choose Domain"
+msgstr "③ 选择域名"
+
+msgid "④ Ingress Rules"
+msgstr "④ 接入规则"
+
+msgid "⑤ Publish DNS"
+msgstr "⑤ 发布 DNS"
+
+msgid "⑥ Control-plane Worker"
+msgstr "⑥ 控制面 Worker"
+
+msgid "⑦ Verify & Finish"
+msgstr "⑦ 验证并完成"

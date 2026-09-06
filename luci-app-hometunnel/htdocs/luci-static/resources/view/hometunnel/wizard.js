@@ -68,10 +68,11 @@ return view.extend({
 	getStep: function () {
 		if (!this.certOk) return 1;
 		if (!uci.get('hometunnel', 'global', 'tunnel_id')) return 2;
-		if (this.ingressCount < 1) return 3;
-		if (!this.dnsOk) return 4;
-		if (!this.workerOk) return 5;
-		return 6;
+		if (!uci.get('hometunnel', 'global', 'domain')) return 3;
+		if (this.ingressCount < 1) return 4;
+		if (!this.dnsOk) return 5;
+		if (!this.workerOk) return 6;
+		return 7;
 	},
 
 	renderInner: function () {
@@ -85,10 +86,11 @@ return view.extend({
 		var titles = [
 			_('① Cloudflare Authorization'),
 			_('② Create Tunnel'),
-			_('③ Ingress Rules'),
-			_('④ Publish DNS'),
-			_('⑤ Control-plane Worker'),
-			_('⑥ Verify & Finish')
+			_('③ Choose Domain'),
+			_('④ Ingress Rules'),
+			_('⑤ Publish DNS'),
+			_('⑥ Control-plane Worker'),
+			_('⑦ Verify & Finish')
 		];
 
 		container.appendChild(E('ol', { 'style': 'margin:8px 0 16px 0;padding-left:20px' },
@@ -110,6 +112,7 @@ return view.extend({
 			case 4: this.step4(body); break;
 			case 5: this.step5(body); break;
 			case 6: this.step6(body); break;
+			case 7: this.step7(body); break;
 		}
 
 		return container;
@@ -204,8 +207,69 @@ return view.extend({
 		body.appendChild(out);
 	},
 
-	/* ---- 步骤 3: ingress 规则 ---- */
+	/* ---- 步骤 3: 选择域名（cert.pem token 反查账户 zone 列表）---- */
 	step3: function (body) {
+		var self = this;
+		body.appendChild(E('p', {},
+			_('Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account).')));
+
+		var sel = E('select', { 'class': 'cbi-input-select' });
+		var loadBtn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Fetch Domains'));
+		var applyBtn = E('button', { 'class': 'btn cbi-button cbi-button-save important', 'style': 'display:none' }, _('Save Domain'));
+		var out = E('pre', { 'style': 'max-height:120px;overflow:auto;font-size:12px' }, '');
+
+		loadBtn.addEventListener('click', function (ev) {
+			ev.preventDefault();
+			loadBtn.disabled = true;
+			sel.innerHTML = '';
+			sel.appendChild(E('option', { 'value': '' }, _('loading…')));
+			fs.exec(HT, ['zones']).then(function (res) {
+				var text = (res.stdout || '') + (res.stderr || '');
+				sel.innerHTML = '';
+				if (res.code === 0) {
+					var lines = text.trim().split('\n').filter(Boolean);
+					lines.forEach(function (l) {
+						var parts = l.trim().split(/\s+/);
+						sel.appendChild(E('option', { 'value': parts[0] },
+							parts[0] + (parts[1] ? ' (' + parts[1] + ')' : '')));
+					});
+					if (lines.length > 0) {
+						sel.style.display = '';
+						applyBtn.style.display = '';
+						loadBtn.textContent = _('Refetch');
+					}
+				} else {
+					sel.style.display = 'none';
+					out.textContent = text;
+				}
+				loadBtn.disabled = false;
+			});
+		});
+
+		applyBtn.addEventListener('click', function (ev) {
+			ev.preventDefault();
+			var d = sel.value;
+			if (!d) return;
+			applyBtn.disabled = true;
+			fs.exec(HT, ['set', 'domain', d]).then(function (res) {
+				if (res.code === 0) {
+					out.appendChild(E('div', { 'class': 'alert-message success' }, _('Saved! Loading next step…')));
+					window.setTimeout(function () { location.reload(); }, 1000);
+				} else {
+					applyBtn.disabled = false;
+					out.textContent = (res.stdout || '') + (res.stderr || '');
+				}
+			});
+		});
+
+		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [loadBtn]));
+		body.appendChild(E('div', { 'style': 'margin:6px 0' }, [sel, ' ', applyBtn]));
+		sel.style.display = 'none';
+		body.appendChild(out);
+	},
+
+	/* ---- 步骤 4: ingress 规则 ---- */
+	step4: function (body) {
 		body.appendChild(E('p', {},
 			_('Add at least one service to expose. Continue in the Ingress Rules page, then come back.')));
 		body.appendChild(E('a', {
@@ -214,8 +278,8 @@ return view.extend({
 		}, _('Open Ingress Rules')));
 	},
 
-	/* ---- 步骤 4: route dns ---- */
-	step4: function (body) {
+	/* ---- 步骤 5: route dns ---- */
+	step5: function (body) {
 		var self = this;
 		body.appendChild(E('p', {},
 			_('Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token).')));
@@ -252,8 +316,8 @@ return view.extend({
 		});
 	},
 
-	/* ---- 步骤 5: worker bundle ---- */
-	step5: function (body) {
+	/* ---- 步骤 6: worker bundle ---- */
+	step6: function (body) {
 		var domain = uci.get('hometunnel', 'global', 'domain');
 		body.appendChild(E('p', {}, [
 			_('Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. ') +
@@ -310,8 +374,8 @@ return view.extend({
 		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [doneBtn]));
 	},
 
-	/* ---- 步骤 6: verify + finish ---- */
-	step6: function (body) {
+	/* ---- 步骤 7: verify + finish ---- */
+	step7: function (body) {
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		body.appendChild(E('p', {},
 			_('Verify the control plane from the router, then enable the daemon and go to the status page.')));

@@ -12,6 +12,7 @@
 #   verify                  控制面连通性验证: /healthz + /cmd（带 key）
 #   status                  人读状态汇总
 #   cleanup                 tunnel delete + 清理指引
+#   zones                   用 cert.pem 内的 apiToken 列出账户全部 Cloudflare zone（域名）
 #   apply-mode              按 UCI mode 联动两个 init 的 enable 状态并 start/stop
 #   genkey                  生成/重建 /etc/hometunnel/ctl.key
 #
@@ -51,6 +52,28 @@ cmd_mark() {
 	mkdir -p "$RUNDIR"
 	: > "$RUNDIR/$1"
 	msg "marked: $1"
+}
+
+# set <key> <value> — 向导轻量写 UCI（仅限 global 段已知键）
+cmd_set() {
+	local key val
+	key="${1:-}"
+	val="${2:-}"
+	case "$key" in
+		domain|ctl_hostname|tunnel_name|default_ttl|hard_cap)
+			;;
+		*)
+			die "refusing to set unknown key: $key"
+			;;
+	esac
+	case "$val" in
+		*[!a-zA-Z0-9._-]*)
+			die "invalid characters in value"
+			;;
+	esac
+	uci set "$UCI_CONF.global.$key=$val"
+	uci commit "$UCI_CONF"
+	msg "OK: $key saved"
 }
 
 # ---- 后台 job 机制（向导异步长任务）----
@@ -281,6 +304,35 @@ cmd_status() {
 	fi
 }
 
+# 从 cert.pem 的 ARGO TUNNEL TOKEN 解出 apiToken（cfut_…，可调 CF API v4）
+cert_api_token() {
+	awk '/BEGIN ARGO TUNNEL TOKEN/{f=1;next} /END ARGO TUNNEL TOKEN/{f=0} f' \
+		"$ETC/.cloudflared/cert.pem" 2>/dev/null | tr -d '\n' | base64 -d 2>/dev/null \
+		| grep -oE '"apiToken":"[^"]+"' | cut -d'"' -f4
+}
+
+# 列出账户全部 zone（域名）。输出: <name> <status> 每行一个；失败 die。
+cmd_zones() {
+	local token resp
+	[ -f "$ETC/.cloudflared/cert.pem" ] || die "cert.pem not found (run login first)"
+	token=$(cert_api_token)
+	[ -n "$token" ] || die "cannot parse apiToken from cert.pem"
+	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $token" \
+		"https://api.cloudflare.com/client/v4/zones?per_page=50" 2>&1) \
+		|| die "cloudflare api unreachable: $resp"
+	# jsonfilter 为 OpenWrt 原生 JSON 工具；-e 提取数组元素
+	names=$(jsonfilter -s "$resp" -e '@.result[*].name' 2>/dev/null)
+	stats=$(jsonfilter -s "$resp" -e '@.result[*].status' 2>/dev/null)
+	[ -n "$names" ] || die "no zones in account (or parse error)"
+	# BusyBox 无 paste；awk 双文件按行号配对 name/status
+	tmp=$(mktemp /tmp/ht-zones.XXXXXX)
+	printf '%s\n' "$names" > "$tmp.n"
+	printf '%s\n' "$stats" > "$tmp.s"
+	awk 'NR==FNR { n[NR]=$0; next } { print n[FNR], $0 }' "$tmp.n" "$tmp.s" 2>/dev/null \
+		|| printf '%s\n' "$names"
+	rm -f "$tmp.n" "$tmp.s"
+}
+
 cmd_cleanup() {
 	local name id ans
 	name=$(get_ tunnel_name hometunnel)
@@ -338,9 +390,11 @@ case "${1:-}" in
 	verify)     cmd_verify ;;
 	ctl)        shift; cmd_ctl "$@" ;;
 	status)     cmd_status ;;
+	zones)      cmd_zones ;;
 	cleanup)    cmd_cleanup ;;
 	apply-mode) cmd_apply_mode ;;
 	mark)       shift; cmd_mark "$@" ;;
+	set)        shift; cmd_set "$@" ;;
 	genkey)     genkey ;;
 	*)
 		cat <<'EOF'
@@ -355,8 +409,10 @@ usage: hometunnel.sh <command>
   verify                verify control plane (healthz + /cmd)
   ctl on|off            turn tunnel on/off from the router side (LuCI buttons)
   status                human-readable status
+  zones                 list all Cloudflare zones (domains) via cert.pem token
   cleanup               delete tunnel + local cleanup
   apply-mode            apply UCI mode to init enable states
+  set <key> <value>     set a global UCI option (wizard backend)
   genkey                (re)generate ctl.key
 EOF
 		exit 1

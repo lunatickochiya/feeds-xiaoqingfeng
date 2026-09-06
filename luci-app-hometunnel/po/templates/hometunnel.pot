@@ -440,3 +440,39 @@ msgstr ""
 
 msgid "Settings"
 msgstr ""
+
+msgid "Fetch Domains"
+msgstr ""
+
+msgid "Fix the issue (e.g. router DNS), reload this page and try again."
+msgstr ""
+
+msgid "Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account)."
+msgstr ""
+
+msgid "Refetch"
+msgstr ""
+
+msgid "Save Domain"
+msgstr ""
+
+msgid "Saved! Loading next step…"
+msgstr ""
+
+msgid "cloudflared exited before the certificate was fetched:"
+msgstr ""
+
+msgid "③ Choose Domain"
+msgstr ""
+
+msgid "④ Ingress Rules"
+msgstr ""
+
+msgid "⑤ Publish DNS"
+msgstr ""
+
+msgid "⑥ Control-plane Worker"
+msgstr ""
+
+msgid "⑦ Verify & Finish"
+msgstr ""
