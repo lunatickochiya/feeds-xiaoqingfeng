@@ -225,8 +225,10 @@ return view.extend({
 
 		var container = E('div', {}, [
 			E('h2', {}, _('HomeTunnel')),
-			E('div', { 'class': 'cbi-section-descr' },
-				_('Live topology generated from your configuration.'))
+			E('div', { 'class': 'alert alert-info d-flex align-items-center flex-wrap', 'style': 'gap:.5rem' }, [
+				E('span', { 'class': 'dripicons-graph-line', 'style': 'font-size:16px;margin-right:8px' }),
+				_('Live topology generated from your configuration.')
+			])
 		]);
 
 		/* 动画样式（数据流滚动 + cloudflared 呼吸） */

@@ -79,8 +79,10 @@ return view.extend({
 		var step = this.getStep();
 		var container = E('div', {}, [
 			E('h2', {}, _('HomeTunnel Wizard')),
-			E('div', { 'class': 'cbi-section-descr' },
-				_('Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare).'))
+			E('div', { 'class': 'alert alert-info d-flex align-items-center flex-wrap', 'style': 'gap:.5rem' }, [
+				E('span', { 'class': 'dripicons-information', 'style': 'font-size:16px;margin-right:8px' }),
+				_('Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare).')
+			])
 		]);
 
 		var titles = [

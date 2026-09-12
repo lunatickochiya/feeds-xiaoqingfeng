@@ -39,7 +39,7 @@ msgstr ""
 msgid "Control plane state"
 msgstr ""
 
-msgid "Control plane: %s"
+msgid "Control plane:"
 msgstr ""
 
 msgid "Control-plane subdomain"

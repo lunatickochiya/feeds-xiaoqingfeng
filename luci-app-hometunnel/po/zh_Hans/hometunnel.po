@@ -40,8 +40,8 @@ msgstr "控制守护进程"
 msgid "Control plane state"
 msgstr "控制面状态"
 
-msgid "Control plane: %s"
-msgstr "控制面：%s"
+msgid "Control plane:"
+msgstr "控制面："
 
 msgid "Control-plane subdomain"
 msgstr "控制面子域名"

@@ -73,11 +73,19 @@ return view.extend({
 			var ctlJson = parseCtlJson(backendStatus);
 			var cfState = parseCfState(backendStatus);
 
+			var descrChildren = [
+				E('span', { 'class': 'dripicons-cloud', 'style': 'font-size:16px;margin-right:8px;vertical-align:-2px' }),
+				_('HomeLede intranet exposure via a free Cloudflare Tunnel.')
+			];
+			if (ctlUrl) {
+				descrChildren.push(E('span', { 'class': 'mx-1' }, '·'));
+				descrChildren.push(E('a', { 'href': ctlUrl, 'target': '_blank', 'rel': 'noopener' },
+					ctlUrl));
+			}
+
 			var container = E('div', {}, [
 				E('h2', {}, _('HomeTunnel')),
-				E('div', { 'class': 'cbi-section-descr' },
-					_('HomeLede intranet exposure via a free Cloudflare Tunnel.') +
-					(ctlUrl ? ' ' + _('Control plane: %s').format(ctlUrl) : ''))
+				E('div', { 'class': 'alert alert-info d-flex align-items-center flex-wrap', 'style': 'gap:.5rem' }, descrChildren)
 			]);
 
 			if (!configured) {
