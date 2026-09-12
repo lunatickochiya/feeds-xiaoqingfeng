@@ -325,7 +325,7 @@ return view.extend({
 	/* ---- 步骤 4: ingress 规则 ---- */
 	step4: function (body) {
 		body.appendChild(E('p', {},
-			_('Add at least one service to expose. Continue in the Ingress Rules page, then come back.')));
+			_('Add at least one service to open to the public internet. Add it in the "Ingress Rules" tab, then come back here.')));
 		body.appendChild(E('a', {
 			'class': 'btn cbi-button cbi-button-apply important',
 			'href': L.url('admin', 'services', 'hometunnel', 'ingress')

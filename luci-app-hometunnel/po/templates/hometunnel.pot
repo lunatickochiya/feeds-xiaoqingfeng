@@ -9,7 +9,7 @@ msgstr ""
 msgid "(log unavailable)"
 msgstr ""
 
-msgid "Add at least one service to expose. Continue in the Ingress Rules page, then come back."
+msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
 msgstr ""
 
 msgid "All checks passed. Daemon enabled. Opening status page…"

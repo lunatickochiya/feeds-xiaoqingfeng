@@ -10,8 +10,8 @@ msgstr "（空）"
 msgid "(log unavailable)"
 msgstr "（日志不可用）"
 
-msgid "Add at least one service to expose. Continue in the Ingress Rules page, then come back."
-msgstr "至少添加一个要暴露的服务。请继续在内网服务规则页面添加，然后回到这里。"
+msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
+msgstr "至少添加一个要开放到公网的服务。请在“接入规则”TAB页面中添加，然后回到这里。"
 
 msgid "All checks passed. Daemon enabled. Opening status page…"
 msgstr "全部通过。守护已启用。正在打开状态页…"
