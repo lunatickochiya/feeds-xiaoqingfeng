@@ -326,10 +326,16 @@ return view.extend({
 	step4: function (body) {
 		body.appendChild(E('p', {},
 			_('Add at least one service to open to the public internet. Add it in the "Ingress Rules" tab, then come back here.')));
+		/* 主题 CSS 未定义 .cbi-button-apply（那套类是给 <button> 的），<a> 会渲染成裸链接。
+		 * 用主题 Bootstrap 的 .btn-primary 配方（#348cd4 实底白字）+ 白色图标 */
 		body.appendChild(E('a', {
-			'class': 'btn cbi-button cbi-button-apply important',
+			'class': 'btn btn-primary d-inline-flex align-items-center',
+			'style': 'gap:.35rem;text-decoration:none;margin-top:6px',
 			'href': L.url('admin', 'services', 'hometunnel', 'ingress')
-		}, _('Open Ingress Rules')));
+		}, [
+			E('span', { 'class': 'dripicons-arrow-thin-right', 'style': 'font-size:13px' }),
+			_('Open Ingress Rules')
+		]));
 	},
 
 	/* ---- 步骤 5: route dns ---- */

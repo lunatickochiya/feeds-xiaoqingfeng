@@ -152,7 +152,7 @@ msgid "On-demand parameters"
 msgstr "按需模式参数"
 
 msgid "Open Ingress Rules"
-msgstr "打开内网服务规则"
+msgstr "打开接入规则"
 
 msgid "Open Wizard"
 msgstr "打开向导"
