@@ -101,14 +101,43 @@ return view.extend({
 			_('⑦ Verify & Finish')
 		];
 
-		container.appendChild(E('ol', { 'style': 'margin:8px 0 16px 0;padding-left:20px' },
-			titles.map(function (t, i) {
-				return E('li', {
-					'style': 'font-weight:' + (i === step - 1 ? 'bold' : 'normal') +
-						';color:' + (i < step - 1 ? 'green' : 'inherit')
-				}, t);
-			})
-		));
+		/* 步骤指示器（stepper）: 已完成=绿勾徽章 / 当前=蓝胶囊 / 未到=灰。
+		 * 配色对齐主题: badge-soft-success(#78c350 on 18% green) + 主题蓝 #348cd4 + 卡片深底。
+		 * 标题自带 ①-⑦ 编号，不再重复加数字；箭头与后续胶囊绑成单元，换行时成对移动 */
+		var stepBar = E('div', {
+			'class': 'd-flex align-items-center flex-wrap',
+			'style': 'gap:.3rem;padding:.5rem .65rem;border-radius:.5rem;'
+				+ 'background:rgba(54,64,74,.9);border:1px solid rgba(255,255,255,.07)'
+		});
+		titles.forEach(function (t, i) {
+			var done = i < step - 1;
+			var active = i === step - 1;
+			var pill = E('span', {
+				'class': 'd-inline-flex align-items-center',
+				'style': 'gap:.3rem;padding:.22rem .6rem;border-radius:999px;font-size:12.5px;white-space:nowrap;'
+					+ (done
+						? 'color:#78c350;background-color:rgba(120,195,80,.18);'
+						: active
+							? 'color:#fff;background-color:#348cd4;font-weight:600;'
+							: 'color:rgba(148,160,173,.55);background-color:rgba(255,255,255,.05);')
+			}, [
+				done ? E('span', { 'class': 'dripicons-checkmark', 'style': 'font-size:12px' }) : null,
+				E('span', {}, t)
+			].filter(Boolean));
+			if (i === 0) {
+				stepBar.appendChild(pill);
+			} else {
+				/* 连接箭头：通向已完成步骤的段绿色，否则暗灰；与胶囊绑成整体防孤行 */
+				stepBar.appendChild(E('span', { 'class': 'd-inline-flex align-items-center', 'style': 'white-space:nowrap' }, [
+					E('span', {
+						'class': 'dripicons-arrow-thin-right',
+						'style': 'font-size:11px;margin:0 .2rem;color:' + (i < step ? '#78c350' : 'rgba(148,160,173,.35)')
+					}),
+					pill
+				]));
+			}
+		});
+		container.appendChild(stepBar);
 
 		var body = E('div', { 'class': 'cbi-section' });
 		container.appendChild(body);
