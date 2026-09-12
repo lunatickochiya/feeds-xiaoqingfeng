@@ -79,8 +79,10 @@ return view.extend({
 			];
 			if (ctlUrl) {
 				descrChildren.push(E('span', { 'class': 'mx-1' }, '·'));
-				descrChildren.push(E('a', { 'href': ctlUrl, 'target': '_blank', 'rel': 'noopener' },
-					ctlUrl));
+				descrChildren.push(E('a', {
+					'href': ctlUrl, 'target': '_blank', 'rel': 'noopener',
+					'style': 'text-decoration:underline'
+				}, ctlUrl));
 			}
 
 			var container = E('div', {}, [
@@ -88,8 +90,8 @@ return view.extend({
 				E('div', {
 					'class': 'd-flex align-items-center flex-wrap',
 					'style': 'gap:.5rem;padding:.6rem 1rem;border-radius:.5rem;'
-						+ 'background-color:rgba(52,140,212,.1);'
-						+ 'border:1px solid rgba(52,140,212,.25);'
+						+ 'background:linear-gradient(rgba(52,140,212,.14),rgba(52,140,212,.14)),rgba(54,64,74,.9);'
+						+ 'border:1px solid rgba(52,140,212,.3);'
 						+ 'color:inherit'
 				}, descrChildren)
 			]);

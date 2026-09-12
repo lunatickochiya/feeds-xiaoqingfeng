@@ -82,8 +82,8 @@ return view.extend({
 			E('div', {
 				'class': 'd-flex align-items-center flex-wrap',
 				'style': 'gap:.5rem;padding:.6rem 1rem;border-radius:.5rem;'
-					+ 'background-color:rgba(52,140,212,.1);'
-					+ 'border:1px solid rgba(52,140,212,.25);'
+					+ 'background:linear-gradient(rgba(52,140,212,.14),rgba(52,140,212,.14)),rgba(54,64,74,.9);'
+					+ 'border:1px solid rgba(52,140,212,.3);'
 					+ 'color:inherit'
 			}, [
 				E('span', { 'class': 'dripicons-information', 'style': 'font-size:16px;margin-right:8px;color:#348cd4' }),
