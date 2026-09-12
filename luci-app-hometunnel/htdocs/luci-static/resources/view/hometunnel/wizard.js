@@ -8,6 +8,7 @@
 'require rpc';
 'require uci';
 'require view';
+'require view.hometunnel.ui as htui';
 
 var HT = '/usr/share/hometunnel/hometunnel.sh';
 var RUNDIR = '/var/run/hometunnel';
@@ -77,7 +78,7 @@ return view.extend({
 
 	renderInner: function () {
 		var step = this.getStep();
-		var container = E('div', {}, [
+		var container = htui.apply(E('div', {}, [
 			E('h2', {}, _('HomeTunnel Wizard')),
 			E('div', {
 				'class': 'd-flex align-items-center flex-wrap',
@@ -88,8 +89,8 @@ return view.extend({
 			}, [
 				E('span', { 'class': 'dripicons-information', 'style': 'font-size:16px;margin-right:8px;color:#348cd4' }),
 				_('Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare).')
-			])
-		]);
+				])
+				]));
 
 		var titles = [
 			_('① Cloudflare Authorization'),
@@ -326,16 +327,11 @@ return view.extend({
 	step4: function (body) {
 		body.appendChild(E('p', {},
 			_('Add at least one service to open to the public internet. Add it in the "Ingress Rules" tab, then come back here.')));
-		/* 主题 CSS 未定义 .cbi-button-apply（那套类是给 <button> 的），<a> 会渲染成裸链接。
-		 * 用主题 Bootstrap 的 .btn-primary 配方（#348cd4 实底白字）+ 白色图标 */
 		body.appendChild(E('a', {
-			'class': 'btn btn-primary d-inline-flex align-items-center',
-			'style': 'gap:.35rem;text-decoration:none;margin-top:6px',
+			'class': 'btn cbi-button cbi-button-apply important',
+			'style': 'margin-top:6px',
 			'href': L.url('admin', 'services', 'hometunnel', 'ingress')
-		}, [
-			E('span', { 'class': 'dripicons-arrow-thin-right', 'style': 'font-size:13px' }),
-			_('Open Ingress Rules')
-		]));
+		}, _('Open Ingress Rules')));
 	},
 
 	/* ---- 步骤 5: route dns ---- */

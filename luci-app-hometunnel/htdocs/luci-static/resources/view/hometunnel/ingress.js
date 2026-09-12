@@ -6,6 +6,7 @@
 'require form';
 'require uci';
 'require view';
+'require view.hometunnel.ui as htui';
 
 return view.extend({
 	render: function () {
@@ -58,7 +59,8 @@ return view.extend({
 		o.datatype = 'uinteger';
 		o.rmempty = true;
 
-		return m.render();
+		/* form.Map 页: Save&Apply 下拉等元素也缺主题样式, 包一层挂作用域 */
+		return m.render().then(function (node) { return htui.apply(node); });
 	},
 
 	/* 保存后重新生成 config.yml 并平滑重启数据面（uci-applied 事件范式，tinyproxy 同款） */

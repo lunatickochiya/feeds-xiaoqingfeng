@@ -22,6 +22,7 @@ function E(tag, attrs, children) {
 	const el = { tag, attrs: attrs || {}, children: [].concat(children ?? []).filter(Boolean) };
 	el.appendChild = (c) => { el.children.push(c); };
 	el.addEventListener = () => {};
+	el.classList = { add() {}, remove() {} };
 	if (attrs && typeof attrs.click === 'function') el.click = attrs.click;
 	return el;
 }
@@ -53,9 +54,13 @@ function makeEnv(uciState, statusText, ctlKey) {
 	return { uci, fs, rpc, poll, view, L };
 }
 
+/* htui/ui.js 的 mock（apply 原样返回根节点） */
+const htui = { apply: (root) => root };
+const document = { getElementById: () => null, createElement: () => ({ style: {}, classList: { add() {} }, set textContent(v) {} }), head: { appendChild() {} } };
+
 function runModule(env) {
-	const fn = new Function('fs', 'poll', 'rpc', 'uci', 'view', 'L', 'E', '_', src);
-	return fn(env.fs, env.poll, env.rpc, env.uci, env.view, env.L, E, (s) => s);
+	const fn = new Function('fs', 'poll', 'rpc', 'uci', 'view', 'L', 'E', '_', 'htui', 'document', src);
+	return fn(env.fs, env.poll, env.rpc, env.uci, env.view, env.L, E, (s) => s, htui, document);
 }
 
 /* 深度遍历收集所有 innerHTML（SVG 字符串） */

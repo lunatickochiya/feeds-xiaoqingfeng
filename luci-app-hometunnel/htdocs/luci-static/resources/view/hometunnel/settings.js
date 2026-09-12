@@ -7,6 +7,7 @@
 'require fs';
 'require uci';
 'require view';
+'require view.hometunnel.ui as htui';
 
 return view.extend({
 	render: function () {
@@ -100,7 +101,8 @@ return view.extend({
 		o.default = 'auto';
 		o.rmempty = false;
 
-		return m.render();
+		/* form.Map 页: Save&Apply 下拉等元素也缺主题样式, 包一层挂作用域 */
+		return m.render().then(function (node) { return htui.apply(node); });
 	},
 
 	/* 保存后应用模式联动 + 重启守护（参数生效） */

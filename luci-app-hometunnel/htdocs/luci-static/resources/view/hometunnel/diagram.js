@@ -8,6 +8,7 @@
 'require rpc';
 'require uci';
 'require view';
+'require view.hometunnel.ui as htui';
 
 var HT = '/usr/share/hometunnel/hometunnel.sh';
 
@@ -223,7 +224,7 @@ return view.extend({
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		var configured = !!uci.get('hometunnel', 'global', 'tunnel_id');
 
-		var container = E('div', {}, [
+		var container = htui.apply(E('div', {}, [
 			E('h2', {}, _('HomeTunnel')),
 			E('div', {
 				'class': 'd-flex align-items-center flex-wrap',
@@ -235,7 +236,7 @@ return view.extend({
 				E('span', { 'class': 'dripicons-graph-line', 'style': 'font-size:16px;margin-right:8px;color:#348cd4' }),
 				_('Live topology generated from your configuration.')
 			])
-		]);
+		]));
 
 		/* 动画样式（数据流滚动 + cloudflared 呼吸） */
 		container.appendChild(E('style', {}, ''
@@ -316,8 +317,8 @@ return view.extend({
 
 				var mkUrlRow = function (url, label) {
 					var code = E('code', {
-						'style': 'background:#f1f5f9;border:1px solid #e2e8f0;border-radius:4px;' +
-							'padding:4px 8px;font-size:12.5px;word-break:break-all;display:inline-block;max-width:100%'
+						'style': 'background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.12);border-radius:4px;' +
+							'padding:4px 8px;font-size:12.5px;word-break:break-all;display:inline-block;max-width:100%;color:#a9b7c6'
 					}, url);
 					var btn = E('button', { 'class': 'btn cbi-button' }, label);
 					btn.addEventListener('click', function (ev) {

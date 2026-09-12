@@ -8,6 +8,7 @@
 'require rpc';
 'require uci';
 'require view';
+'require view.hometunnel.ui as htui';
 
 var callServiceList = rpc.declare({
 	object: 'service',
@@ -85,7 +86,7 @@ return view.extend({
 				}, ctlUrl));
 			}
 
-			var container = E('div', {}, [
+			var container = htui.apply(E('div', {}, [
 				E('h2', {}, _('HomeTunnel')),
 				E('div', {
 					'class': 'd-flex align-items-center flex-wrap',
@@ -94,7 +95,7 @@ return view.extend({
 						+ 'border:1px solid rgba(52,140,212,.3);'
 						+ 'color:inherit'
 				}, descrChildren)
-			]);
+			]));
 
 			if (!configured) {
 				container.appendChild(E('div', { 'class': 'alert-message warning' }, [
