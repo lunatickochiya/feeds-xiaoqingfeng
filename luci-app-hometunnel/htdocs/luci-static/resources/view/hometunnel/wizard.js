@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Copyright (C) 2026 xiaoqingfeng <xiaoqingfeng@yeah.net> */
-/* hometunnel wizard — 6 步断点向导（job 异步轮询） */
+/* hometunnel wizard — 8 步断点向导（job 异步轮询） */
 
 'use strict';
 'require fs';
@@ -12,6 +12,7 @@
 
 var HT = '/usr/share/hometunnel/hometunnel.sh';
 var RUNDIR = '/var/run/hometunnel';
+var OAUTH_JSON = '/etc/hometunnel/oauth.json';
 
 /* job 轮询: { state: 'running'|'done', rc } */
 function jobPoll(name) {
@@ -60,6 +61,10 @@ return view.extend({
 		}).then(function (st) {
 			self.dnsOk = !!(st && st.size > 0);
 		}).catch(function () { self.dnsOk = false; }).then(function () {
+			return fs.stat(OAUTH_JSON);
+		}).then(function (st) {
+			self.oauthOk = !!(st && st.size > 0);
+		}).catch(function () { self.oauthOk = false; }).then(function () {
 			return fs.stat(RUNDIR + '/worker-verified');
 		}).then(function (st) {
 			self.workerOk = !!(st && st.size > 0);
@@ -70,10 +75,11 @@ return view.extend({
 		if (!this.certOk) return 1;
 		if (!uci.get('hometunnel', 'global', 'tunnel_id')) return 2;
 		if (!uci.get('hometunnel', 'global', 'domain')) return 3;
-		if (this.ingressCount < 1) return 4;
-		if (!this.dnsOk) return 5;
-		if (!this.workerOk) return 6;
-		return 7;
+		if (!this.oauthOk) return 4;
+		if (this.ingressCount < 1) return 5;
+		if (!this.dnsOk) return 6;
+		if (!this.workerOk) return 7;
+		return 8;
 	},
 
 	renderInner: function () {
@@ -96,15 +102,16 @@ return view.extend({
 			_('① Cloudflare Authorization'),
 			_('② Create Tunnel'),
 			_('③ Choose Domain'),
-			_('④ Ingress Rules'),
-			_('⑤ Publish DNS'),
-			_('⑥ Deploy Remote Switch'),
-			_('⑦ Verify & Finish')
+			_('④ Authorize Switch Service'),
+			_('⑤ Ingress Rules'),
+			_('⑥ Publish DNS'),
+			_('⑦ Deploy Switch Service'),
+			_('⑧ Verify & Finish')
 		];
 
 		/* 步骤指示器（stepper）: 已完成=绿勾徽章 / 当前=蓝胶囊 / 未到=灰。
 		 * 配色对齐主题: badge-soft-success(#78c350 on 18% green) + 主题蓝 #348cd4 + 卡片深底。
-		 * 标题自带 ①-⑦ 编号，不再重复加数字；箭头与后续胶囊绑成单元，换行时成对移动 */
+		 * 标题自带 ①-⑧ 编号，不再重复加数字；箭头与后续胶囊绑成单元，换行时成对移动 */
 		var stepBar = E('div', {
 			'class': 'd-flex align-items-center flex-wrap',
 			'style': 'gap:.3rem;padding:.5rem .65rem;border-radius:.5rem;'
@@ -151,6 +158,7 @@ return view.extend({
 			case 5: this.step5(body); break;
 			case 6: this.step6(body); break;
 			case 7: this.step7(body); break;
+			case 8: this.step8(body); break;
 		}
 
 		return container;
@@ -235,7 +243,7 @@ return view.extend({
 			if (state === 'missing' || state === 'auth-failed') {
 				warn.style.display = '';
 				warn.appendChild(E('div', {}, state === 'missing'
-					? _('The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤).')
+					? _('The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑥).')
 					: _('Cloudflare rejected the saved certificate. Re-run step ① first.')));
 			}
 		});
@@ -324,8 +332,97 @@ return view.extend({
 		body.appendChild(out);
 	},
 
-	/* ---- 步骤 4: ingress 规则 ---- */
+	/* ---- 步骤 4: 授权开关服务（OAuth 设备流，一次扫码）---- */
 	step4: function (body) {
+		var self = this;
+		body.appendChild(E('p', {}, [
+			_('Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf. ') +
+			_('Scan the QR code with your phone, or open the link, then tap Allow — that is the only manual step.')
+		]));
+
+		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Start Authorization'));
+		var box = E('div', { 'class': 'cbi-value', 'style': 'margin-top:8px' }, '');
+		btn.addEventListener('click', function (ev) {
+			ev.preventDefault();
+			btn.disabled = true;
+			box.innerHTML = '';
+			fs.exec(HT, ['oauth-start']).then(function (res) {
+				var text = ((res.stdout || '') + (res.stderr || '')).trim();
+				if (res.code !== 0) {
+					box.appendChild(E('div', { 'class': 'alert-message error' }, _('Failed: %s').format(text)));
+					btn.disabled = false;
+					return;
+				}
+				var m = text.match(/\{[^}]*"user_code"[^}]*\}/);
+				var info = null;
+				try { info = JSON.parse(m ? m[0] : text); } catch (e) {}
+				if (info && info.already_authorized) {
+					box.appendChild(E('div', { 'class': 'alert-message success' }, _('Already authorized! Loading next step…')));
+					window.setTimeout(function () { location.reload(); }, 1000);
+					return;
+				}
+				if (!info || !info.verification_url) {
+					box.appendChild(E('div', { 'class': 'alert-message error' }, _('Unexpected response: %s').format(text)));
+					btn.disabled = false;
+					return;
+				}
+				/* 授权卡片: 二维码（有则显示）+ 链接 + 等待状态 */
+				var card = E('div', { 'style': 'display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap' });
+				fs.read_direct(RUNDIR + '/oauth-qr.svg').then(function (svg) {
+					if (svg && svg.length > 100) {
+						var holder = E('div', {
+							'style': 'background:#fff;padding:6px;border-radius:8px;width:172px;height:172px;flex:none'
+						});
+						holder.innerHTML = svg;
+						card.appendChild(holder);
+					}
+				}).catch(function () {});
+				var right = E('div', { 'style': 'flex:1;min-width:220px' });
+				right.appendChild(E('div', { 'style': 'word-break:break-all;margin-bottom:6px' }, [
+					E('a', { 'href': info.verification_url, 'target': '_blank' }, info.verification_url)
+				]));
+				right.appendChild(E('div', { 'class': 'cbi-section-descr' },
+					_('The page is served by Cloudflare and may show "Wrangler" — that is Cloudflare\'s official CLI identity and is expected.')));
+				var status = E('div', { 'style': 'margin-top:8px' }, _('Waiting for authorization…'));
+				right.appendChild(status);
+				card.appendChild(right);
+				box.appendChild(card);
+				/* 轮询授权状态 */
+				poll.add(L.bind(self.watchOauth, self, status));
+			});
+		});
+		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn]));
+		body.appendChild(box);
+	},
+
+	watchOauth: function (statusEl) {
+		return fs.exec(HT, ['oauth-status']).then(function (res) {
+			var text = (res.stdout || '').trim();
+			var st = null;
+			try { st = JSON.parse(text); } catch (e) {}
+			if (!st) return;
+			if (st.state === 'authorized') {
+				statusEl.innerHTML = '';
+				statusEl.appendChild(E('div', { 'class': 'alert-message success' }, _('Authorized! Loading next step…')));
+				window.setTimeout(function () { location.reload(); }, 1000);
+				return;
+			}
+			if (st.state === 'expired') {
+				statusEl.innerHTML = '';
+				statusEl.appendChild(E('div', { 'class': 'alert-message error' }, _('The code expired (5 minutes). Click Start Authorization again.')));
+				return;
+			}
+			if (st.state === 'failed') {
+				statusEl.innerHTML = '';
+				statusEl.appendChild(E('div', { 'class': 'alert-message error' }, _('Failed: %s').format(st.error || 'unknown')));
+				return;
+			}
+			/* pending — 继续轮询 */
+		});
+	},
+
+	/* ---- 步骤 5: ingress 规则 ---- */
+	step5: function (body) {
 		body.appendChild(E('p', {},
 			_('Add at least one service to open to the public internet. Add it in the "Ingress Rules" tab, then come back here.')));
 		body.appendChild(E('a', {
@@ -335,9 +432,10 @@ return view.extend({
 		}, _('Open Ingress Rules')));
 	},
 
-	/* ---- 步骤 5: route dns ---- */
-	step5: function (body) {
+	/* ---- 步骤 6: route dns ---- */
+	step6: function (body) {
 		var self = this;
+
 		body.appendChild(E('p', {},
 			_('Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token).')));
 
@@ -373,69 +471,56 @@ return view.extend({
 		});
 	},
 
-	/* ---- 步骤 6: worker bundle ---- */
-	step6: function (body) {
+	/* ---- 步骤 7: 自动部署开关服务（OAuth token + 路由器内 curl）---- */
+	step7: function (body) {
+		var self = this;
 		var domain = uci.get('hometunnel', 'global', 'domain');
 		body.appendChild(E('p', {}, [
-			_('Download the deployment bundle, extract it on a computer with Node.js, and run '), E('code', {}, './deploy.sh'),
-			_('. ') +
-			_('This deploys the remote-switch service (a Cloudflare Worker) to ') +
+			_('Deploy the switch service (a Cloudflare Worker) to ') +
 			E('code', {}, (uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl') + '.' + domain) +
-			_(' (custom domain, free tier).')
+			_(' — fully automatic from the router, no computer or Node.js needed.')
 		]));
 
-		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Generate Bundle'));
-		var link = E('a', { 'class': 'btn cbi-button', 'style': 'display:none' }, _('Download'));
+		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Deploy Now'));
+		var out = E('pre', { 'style': 'max-height:220px;overflow:auto;font-size:12px' }, '');
 		btn.addEventListener('click', function (ev) {
 			ev.preventDefault();
 			btn.disabled = true;
-			fs.exec(HT, ['bundle']).then(function (res) {
-				var path = (res.stdout || '').trim().split('\n').pop();
-				if (res.code === 0 && path && path.indexOf('/tmp/') === 0) {
-					/* cgi-download 表单提交（flash.js 同款范式） */
-					var form = E('form', {
-						'method': 'post',
-						'action': L.env.cgi_base + '/cgi-download',
-						'enctype': 'application/x-www-form-urlencoded',
-						'style': 'display:none'
-					}, [
-						E('input', { 'type': 'hidden', 'name': 'sessionid', 'value': rpc.getSessionID() }),
-						E('input', { 'type': 'hidden', 'name': 'path', 'value': path }),
-						E('input', { 'type': 'hidden', 'name': 'filename', 'value': path.split('/').pop() })
-					]);
-					document.body.appendChild(form);
-					form.submit();
-					document.body.removeChild(form);
-					btn.textContent = _('Bundle ready — download below');
-					link.onclick = function () {
-						document.body.appendChild(form);
-						form.submit();
-						document.body.removeChild(form);
-						return false;
-					};
-					link.style.display = '';
-				} else {
-					btn.textContent = _('Failed: %s').format((res.stderr || res.stdout || 'unknown').trim());
-					btn.disabled = false;
+			out.textContent = 'deploying…';
+			fs.exec(HT, ['job', 'oauth-deploy', HT, 'oauth-deploy']).then(function () {
+				poll.add(L.bind(self.watchDeploy, self, out, btn), 2);
+			});
+		});
+		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn]));
+		body.appendChild(out);
+
+		body.appendChild(E('p', { 'class': 'cbi-section-descr' }, [
+			_('Prefer a computer? The classic bundle is still available: run '), E('code', {}, 'hometunnel.sh bundle'),
+			_(' on the router and follow the README inside.')
+		]));
+	},
+
+	watchDeploy: function (outEl, btn) {
+		return jobPoll('oauth-deploy').then(function (st) {
+			return jobOut('oauth-deploy').then(function (text) {
+				outEl.textContent = text || '';
+				if (st.state === 'done') {
+					if (st.rc === 0) {
+						fs.exec(HT, ['mark', 'worker-deployed']);
+						outEl.appendChild(E('div', { 'class': 'alert-message success' }, _('Deployed! Loading next step…')));
+						window.setTimeout(function () { location.reload(); }, 1200);
+					} else {
+						outEl.appendChild(E('div', { 'class': 'alert-message error' }, _('Deploy failed — check output above')));
+						btn.disabled = false;
+					}
+					return Promise.reject('done');
 				}
 			});
 		});
-		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn, ' ', link]));
-
-		body.appendChild(E('p', { 'class': 'cbi-section-descr' }, [
-			_('On your computer: '), E('code', {}, 'tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh'.format(domain))
-		]));
-
-		var doneBtn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _("I've deployed — Continue"));
-		doneBtn.addEventListener('click', function (ev) {
-			ev.preventDefault();
-			fs.exec(HT, ['mark', 'worker-deployed']).then(function () { location.reload(); });
-		});
-		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [doneBtn]));
 	},
 
-	/* ---- 步骤 7: verify + finish ---- */
-	step7: function (body) {
+	/* ---- 步骤 8: verify + finish ---- */
+	step8: function (body) {
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		body.appendChild(E('p', {},
 			_('Verify the remote switch from the router, then enable the daemon and go to the status page.')));

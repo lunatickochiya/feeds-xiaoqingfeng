@@ -15,8 +15,16 @@
 #   zones                   用 cert.pem 内的 apiToken 列出账户全部 Cloudflare zone（域名）
 #   apply-mode              按 UCI mode 联动两个 init 的 enable 状态并 start/stop
 #   genkey                  生成/重建 /etc/hometunnel/ctl.key
+#   oauth-start             生成设备授权 URL（RFC 8628，扫码一次授权开关服务部署）
+#   oauth-status            查询授权轮询状态（向导轮询用）
+#   oauth-clear             清除本地保存的 OAuth 凭据（解绑/重授权用）
+#   deploy                  自动部署控制面 Worker（需先完成 oauth，全程路由器内 curl 完成）
+#   oauth-deploy            oauth-start + 轮询等授权 + deploy 一条龙（向导调用）
 #
 # 灵感与协议来源: AI-X-Space/llm-ondemand-tunnel (Apache-2.0)
+# OAuth 设备流实现参照 Cloudflare workers-sdk (wrangler) 公开源码:
+#   client_id = wrangler 官方 OAuth 应用（workers-auth/src/wrangler/env.ts 公开常量）
+#   端点 = dash.cloudflare.com/oauth2/{device/auth,token}（wrangler 同款）
 
 set -u
 
@@ -26,6 +34,15 @@ ETC=/etc/hometunnel
 UCI_CONF=hometunnel
 CF=/usr/bin/cloudflared
 KEY_FILE=$ETC/ctl.key
+OAUTH_JSON=$ETC/oauth.json
+WORKER_NAME=hometunnel-ctl
+
+# wrangler 官方 OAuth 应用（公开常量，无 client_secret）
+OAUTH_CLIENT_ID=54d11594-84e4-41aa-b438-e81b8fa78ee7
+OAUTH_DEVICE_URL=https://dash.cloudflare.com/oauth2/device/auth
+OAUTH_TOKEN_URL=https://dash.cloudflare.com/oauth2/token
+# 只申请部署控制面 Worker 必需的最小权限集（比 wrangler login 默认 30 个 scope 小得多）
+OAUTH_SCOPES='account:read zone:read workers_scripts:write workers_routes:write offline_access'
 
 log() { logger -t hometunnel "$*"; }
 msg() { echo "$*"; }
@@ -356,6 +373,9 @@ cmd_status() {
 	if [ -n "$tunnel_id" ]; then
 		echo "cf-tunnel:   $(cf_tunnel_state "$tunnel_id")"
 	fi
+	if [ -f "$OAUTH_JSON" ]; then
+		echo "oauth:       token present"
+	fi
 }
 
 # 从 cert.pem 的 ARGO TUNNEL TOKEN 解出 JSON 字段（apiToken/accountID/zoneID）
@@ -366,6 +386,57 @@ cert_json_field() {
 }
 
 cert_api_token() { cert_json_field apiToken; }
+
+# OAuth 凭据里保存的 access_token（600 权限 /etc/hometunnel/oauth.json）
+oauth_access_token() {
+	grep -oE '"access_token":"[^"]+"' "$OAUTH_JSON" 2>/dev/null | cut -d'"' -f4
+}
+
+oauth_refresh_token() {
+	grep -oE '"refresh_token":"[^"]+"' "$OAUTH_JSON" 2>/dev/null | cut -d'"' -f4
+}
+
+# 有效（未过期、必要时能刷新）的 access token；失败 die。
+# oauth.json 结构: {"access_token":"...","expires_at":<epoch>,"refresh_token":"...","account_id":"..."}
+oauth_valid_token() {
+	local tok exp now resp
+	[ -f "$OAUTH_JSON" ] || die "not authorized (run oauth-start)"
+	tok=$(oauth_access_token)
+	exp=$(grep -oE '"expires_at":[0-9]+' "$OAUTH_JSON" 2>/dev/null | grep -oE '[0-9]+')
+	now=$(date +%s)
+	if [ -n "$tok" ] && [ -n "$exp" ] && [ "$exp" -gt $((now + 60)) ]; then
+		echo "$tok"
+		return 0
+	fi
+	# 过期 → 用 refresh_token 刷新（wrangler 同款 grant_type=refresh_token）
+	oauth_refresh
+}
+
+# 用 refresh token 换新 access token（旋转后覆盖保存）
+oauth_refresh() {
+	local rt resp tok exp new_rt
+	rt=$(oauth_refresh_token)
+	[ -n "$rt" ] || die "oauth: no refresh token saved — re-authorize (oauth-start)"
+	resp=$(curl -fsS --max-time 15 -X POST "$OAUTH_TOKEN_URL" \
+		-H 'User-Agent: wrangler/4.40.0' \
+		--data-urlencode "grant_type=refresh_token" \
+		--data-urlencode "refresh_token=$rt" \
+		--data-urlencode "client_id=$OAUTH_CLIENT_ID" 2>&1) || die "oauth refresh failed: $resp"
+	tok=$(echo "$resp" | grep -oE '"access_token":"[^"]+"' | cut -d'"' -f4)
+	exp=$(echo "$resp" | grep -oE '"expires_in":[0-9]+' | grep -oE '[0-9]+')
+	new_rt=$(echo "$resp" | grep -oE '"refresh_token":"[^"]+"' | cut -d'"' -f4)
+	[ -n "$tok" ] && [ -n "$exp" ] || die "oauth refresh: cannot parse response"
+	# 保留原 account_id（刷新响应不带）
+	local acct
+	acct=$(grep -oE '"account_id":"[^"]+"' "$OAUTH_JSON" 2>/dev/null | cut -d'"' -f4)
+	{
+		printf '{"access_token":"%s","expires_at":%s,"refresh_token":"%s","account_id":"%s"}\n' \
+			"$tok" "$(( $(date +%s) + exp ))" "${new_rt:-$rt}" "${acct:-}"
+	} > "$OAUTH_JSON"
+	chmod 600 "$OAUTH_JSON"
+	msg "oauth: token refreshed"
+	echo "$tok"
+}
 
 # 查询 tunnel 在 CF 侧的存在性（cert.pem apiToken 调 API v4）。
 # 输出: exists | missing | auth-failed | unknown:<reason>
@@ -476,6 +547,281 @@ cmd_apply_mode() {
 	esac
 }
 
+# ===================== OAuth 设备流（RFC 8628）=====================
+# 复刻 wrangler login 的设备授权流（wrangler 同款 client_id/端点/scope 集），
+# 让用户在手机上扫一次码完成授权；之后 Worker 部署全部由路由器 curl 完成。
+# 凭据存 /etc/hometunnel/oauth.json（600）。
+
+# oauth-start: 发起设备授权。输出 JSON（向导读取）:
+#   {"user_code":"XXXX","verification_url":"https://...?user_code=XXXX","expires_in":300,"interval":5}
+# 同时生成二维码 SVG → /var/run/hometunnel/oauth-qr.svg（向导内联显示；无 qrencode 则跳过）
+cmd_oauth_start() {
+	local resp dc uc vu interval tok exp
+	mkdir -p "$ETC"
+	chmod 700 "$ETC"
+	# 已有有效凭据 → 直接告诉向导（幂等）
+	if [ -f "$OAUTH_JSON" ] && tok=$(oauth_access_token) && [ -n "$tok" ]; then
+		exp=$(grep -oE '"expires_at":[0-9]+' "$OAUTH_JSON" | grep -oE '[0-9]+')
+		if [ -n "$exp" ] && [ "$exp" -gt $(( $(date +%s) + 60 )) ]; then
+			msg '{"already_authorized":true}'
+			return 0
+		fi
+	fi
+	resp=$(curl -fsS --max-time 20 -X POST "$OAUTH_DEVICE_URL" \
+		-H 'User-Agent: wrangler/4.40.0' \
+		--data-urlencode "client_id=$OAUTH_CLIENT_ID" \
+		--data-urlencode "scope=$OAUTH_SCOPES" 2>&1) || die "device auth request failed: $resp"
+	dc=$(echo "$resp" | grep -oE '"device_code":"[^"]+"' | cut -d'"' -f4)
+	uc=$(echo "$resp" | grep -oE '"user_code":"[^"]+"' | cut -d'"' -f4)
+	vu=$(echo "$resp" | grep -oE '"verification_uri_complete":"[^"]+"' | cut -d'"' -f4)
+	[ -n "$dc" ] && [ -n "$uc" ] || die "device auth: cannot parse response: $resp"
+	[ -n "$vu" ] || vu=$(echo "$resp" | grep -oE '"verification_uri":"[^"]+"' | cut -d'"' -f4)
+	# device_code + 轮询参数存 RUNDIR（tmpfs，重启即失效=重新授权，安全默认）
+	mkdir -p "$RUNDIR"
+	{
+		printf 'device_code=%s\n' "$dc"
+		printf 'user_code=%s\n' "$uc"
+		printf 'interval=%s\n' "$(echo "$resp" | grep -oE '"interval":[0-9]+' | grep -oE '[0-9]+' || echo 5)"
+		printf 'deadline=%s\n' "$(( $(date +%s) + 290 ))"
+	} > "$RUNDIR/oauth-device"
+	chmod 600 "$RUNDIR/oauth-device"
+	# 二维码 SVG（手机扫码授权；qrencode 未安装则向导只显示链接）
+	if command -v qrencode >/dev/null 2>&1; then
+		qrencode -t SVG -o "$RUNDIR/oauth-qr.svg" "$vu" 2>/dev/null || true
+	else
+		rm -f "$RUNDIR/oauth-qr.svg"
+	fi
+	# 向导读的 JSON（verification_uri_complete 优先——用户不用手输 code）
+	printf '{"user_code":"%s","verification_url":"%s","expires_in":300}\n' "$uc" "$vu"
+}
+
+# oauth-status: 查询轮询状态。输出 JSON:
+#   {"state":"pending"}                      用户还没在浏览器点 Allow
+#   {"state":"authorized"}                   拿到 token（oauth.json 已写）
+#   {"state":"expired"}                      设备码过期（5 分钟）
+#   {"state":"failed","error":"..."}         出错
+cmd_oauth_status() {
+	local dc interval now resp tok rt exp acct
+	# 已授权 → 幂等返回
+	if [ -f "$OAUTH_JSON" ] && tok=$(oauth_access_token) && [ -n "$tok" ]; then
+		msg '{"state":"authorized"}'
+		return 0
+	fi
+	[ -f "$RUNDIR/oauth-device" ] || { msg '{"state":"failed","error":"no device flow in progress"}'; return 0; }
+	. "$RUNDIR/oauth-device"
+	now=$(date +%s)
+	[ "${deadline:-0}" -gt "$now" ] || { msg '{"state":"expired"}'; return 0; }
+	resp=$(curl -sS --max-time 15 -X POST "$OAUTH_TOKEN_URL" \
+		-H 'User-Agent: wrangler/4.40.0' \
+		--data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:device_code' \
+		--data-urlencode "device_code=$device_code" \
+		--data-urlencode "client_id=$OAUTH_CLIENT_ID" 2>&1)
+	tok=$(echo "$resp" | grep -oE '"access_token":"[^"]+"' | cut -d'"' -f4)
+	if [ -n "$tok" ]; then
+		exp=$(echo "$resp" | grep -oE '"expires_in":[0-9]+' | grep -oE '[0-9]+')
+		rt=$(echo "$resp" | grep -oE '"refresh_token":"[^"]+"' | cut -d'"' -f4)
+		# account_id 从 /memberships 取（首次授权时；刷新时保留）
+		acct=$(oauth_query_account_id "$tok")
+		{
+			printf '{"access_token":"%s","expires_at":%s,"refresh_token":"%s","account_id":"%s"}\n' \
+				"$tok" "$(( now + ${exp:-3600} ))" "${rt:-}" "${acct:-}"
+		} > "$OAUTH_JSON"
+		chmod 600 "$OAUTH_JSON"
+		rm -f "$RUNDIR/oauth-device"
+		msg '{"state":"authorized"}'
+		return 0
+	fi
+	# RFC 8628 错误分类
+	case "$resp" in
+		*'"authorization_pending"'*|*'"authorization_pending"'*)
+			msg '{"state":"pending"}'
+			;;
+		*'"slow_down"'*)
+			msg '{"state":"pending"}'
+			;;
+		*'"expired_token"'*|*'"expired_token"'*)
+			msg '{"state":"expired"}'
+			;;
+		*)
+			msg '{"state":"failed","error":"'"$(echo "$resp" | head -c 300 | tr -d '\n"')"'"}'
+			;;
+	esac
+}
+
+# 用 access token 查 memberships 拿 account_id（单账户场景）
+oauth_query_account_id() {
+	local tok="$1" resp
+	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/memberships?limit=5" 2>/dev/null) || return 1
+	jsonfilter -s "$resp" -e '@.result[0].account.id' 2>/dev/null
+}
+
+cmd_oauth_clear() {
+	rm -f "$OAUTH_JSON" "$RUNDIR/oauth-device"
+	msg "OK: oauth credentials cleared"
+}
+
+# ===================== 自动部署（curl 直传 Worker）=====================
+# deploy: 用 oauth token 上传控制面 Worker + 绑自定义域。
+# 全程路由器内 curl（Workers Script Upload API multipart + workers/domains PUT），
+# wrangler 完全不参与。幂等：重复执行 = 更新 Worker 版本。
+
+cmd_deploy() {
+	local tok acct domain ctl_host key zone_id resp
+	domain=$(get_ domain '')
+	ctl_host=$(get_ ctl_hostname ctl)
+	# ctl.key 缺失则自动生成（首次部署前用户可能从未跑过 bundle/genkey）
+	if [ ! -s "$KEY_FILE" ]; then
+		msg "ctl.key missing — generating"
+		genkey
+	fi
+	key=$(cat "$KEY_FILE" 2>/dev/null)
+	[ -n "$key" ] || die "ctl.key unreadable"
+	[ -n "$domain" ] || die "domain empty (run wizard step 3)"
+
+	tok=$(oauth_valid_token)
+	[ -n "$tok" ] || die "cannot obtain oauth token (authorize first)"
+	acct=$(grep -oE '"account_id":"[^"]+"' "$OAUTH_JSON" | cut -d'"' -f4)
+	[ -n "$acct" ] || { acct=$(oauth_query_account_id "$tok") || die "cannot resolve account_id"; }
+
+	msg "deploy: account=$acct worker=$WORKER_NAME domain=$ctl_host.$domain"
+
+	# 1) zone_id（cert.pem 里有 zoneID 但那是 login 时选的 zone；域名可能不同 → 用 API 查全称精确匹配）
+	zone_id=$(cf_zone_id "$tok" "$domain") || die "zone lookup failed for $domain"
+	msg "deploy: zone=$zone_id"
+
+	# 2) 上传 Worker（multipart: metadata + worker.js）
+	upload_worker "$tok" "$acct" || die "worker upload failed"
+
+	# 3) 绑自定义域（幂等 PUT，重复 = 更新路由）
+	resp=$(curl -fsS --max-time 20 -X PUT \
+		-H "Authorization: Bearer $tok" \
+		-H 'Content-Type: application/json' \
+		-d "{\"hostname\":\"$ctl_host.$domain\",\"service\":\"$WORKER_NAME\",\"zone_id\":\"$zone_id\",\"zone_name\":\"$domain\"}" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/domains" 2>&1) \
+		|| die "workers/domains PUT failed: $resp"
+	echo "$resp" | grep -q '"success": *true' || die "workers/domains unexpected: $resp"
+	msg "OK: custom domain bound ($ctl_host.$domain)"
+
+	# 4) 验证（healthz 轮询，证书签发需几秒）
+	verify_worker_http
+	msg "OK: deployed and verified"
+}
+
+# 用 token 按域名查 zone_id（精确匹配 zone name）
+cf_zone_id() {
+	local tok="$1" domain="$2" resp names ids name id i
+	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/zones?per_page=50" 2>/dev/null) || return 1
+	# 逐行配对 name→id（jsonfilter 分别提取后 awk zip）
+	names=$(jsonfilter -s "$resp" -e '@.result[*].name' 2>/dev/null)
+	ids=$(jsonfilter -s "$resp" -e '@.result[*].id' 2>/dev/null)
+	printf '%s\n' "$names" > /tmp/ht-zones-n.$$
+	printf '%s\n' "$ids" > /tmp/ht-zones-i.$$
+	id=$(awk -v d="$domain" 'NR==FNR { n[NR]=$0; next } { if (n[FNR]==d) { print; exit } }' /tmp/ht-zones-n.$$ /tmp/ht-zones-i.$$)
+	rm -f /tmp/ht-zones-n.$$ /tmp/ht-zones-i.$$
+	[ -n "$id" ] || return 1
+	echo "$id"
+}
+
+# multipart 上传 Worker（curl -F 复刻 wrangler deploy 的 API 调用）
+upload_worker() {
+	local tok="$1" acct="$2" meta tmp resp rc
+	# worker.js 模板先做 TTL 占位符替换（与 bundle 同款 sed），产物只存在 tmpfs
+	tmp=$(mktemp /tmp/ht-worker.XXXXXX.js) || die "mktemp failed"
+	sed -e "s|@@DEFAULT_TTL@@|$(get_ default_ttl 45)|g" \
+	    -e "s|@@MAX_TTL@@|$(get_ max_ttl 240)|g" \
+	    -e "s|@@RENEW_TTL@@|$(get_ renew_ttl 45)|g" \
+	    "$SHARE/worker/worker.js.tpl" > "$tmp"
+	# metadata: main_module + bindings(secret_text CTL_KEY + durable_object_namespace CTL_STATE)
+	#   + compatibility_date + migrations(new_sqlite_classes)
+	# 与 wrangler.toml.tpl 等价（无需 routes——自定义域走 workers/domains 单独 PUT）
+	meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"'"$key"'"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}],"migrations":[{"new_tag":"v1","new_sqlite_classes":["CtlState"]}]}'
+	# curl -F 构建 multipart（curl 自动设 Content-Type: multipart/form-data）
+	resp=$(curl -fsS --max-time 60 -X PUT \
+		-H "Authorization: Bearer $tok" \
+		-F "metadata=$meta;type=application/json" \
+		-F "worker.js=@$tmp;type=application/javascript+module" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/scripts/$WORKER_NAME" 2>&1)
+	rc=$?
+	rm -f "$tmp"
+	# 10074 = Durable Object 类已存在（重复部署）→ 按 wrangler 语义改用增量迁移重试
+	if [ $rc -ne 0 ] || ! echo "$resp" | grep -q '"success": *true'; then
+		if echo "$resp" | grep -q '"code":10074'; then
+			msg "deploy: DO class exists — retrying with incremental migration"
+			meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"'"$key"'"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}],"migrations":[{"new_tag":"v2","new_sqlite_classes":["CtlState"]}]}'
+			tmp=$(mktemp /tmp/ht-worker.XXXXXX.js) || die "mktemp failed"
+			sed -e "s|@@DEFAULT_TTL@@|$(get_ default_ttl 45)|g" \
+			    -e "s|@@MAX_TTL@@|$(get_ max_ttl 240)|g" \
+			    -e "s|@@RENEW_TTL@@|$(get_ renew_ttl 45)|g" \
+			    "$SHARE/worker/worker.js.tpl" > "$tmp"
+			resp=$(curl -fsS --max-time 60 -X PUT \
+				-H "Authorization: Bearer $tok" \
+				-F "metadata=$meta;type=application/json" \
+				-F "worker.js=@$tmp;type=application/javascript+module" \
+				"https://api.cloudflare.com/client/v4/accounts/$acct/workers/scripts/$WORKER_NAME" 2>&1)
+			rc=$?
+			rm -f "$tmp"
+		fi
+	fi
+	[ $rc -eq 0 ] || die "workers/scripts PUT failed: $resp"
+	echo "$resp" | grep -q '"success": *true' || die "worker upload unexpected: $resp"
+	msg "OK: worker uploaded (script=$WORKER_NAME)"
+}
+
+# healthz 轮询验证（自定义域证书签发有延迟，最多等 ~80s）
+verify_worker_http() {
+	local base i resp
+	base=$(ctl_base_url)
+	i=0
+	while [ $i -lt 16 ]; do
+		resp=$(curl -fsS --max-time 8 "$base/healthz" 2>/dev/null)
+		if echo "$resp" | grep -q '"ok": *true'; then
+			msg "healthz: OK"
+			return 0
+		fi
+		i=$((i + 1))
+		sleep 5
+	done
+	die "healthz not reachable at $base after 80s (custom domain cert may still be issuing — retry verify later)"
+}
+
+# oauth-deploy: 向导一条龙 job（等待授权 + 部署）
+cmd_oauth_deploy() {
+	local i=0 st first
+	msg "== waiting for authorization =="
+	# 先发起（若未在途）；oauth-start 的 JSON（user_code/verification_url）透传到 job 输出，
+	# 向导同时读 oauth-start 直连响应与 job 输出，两者取先到者
+	first=$(cmd_oauth_start 2>&1)
+	msg "$first"
+	case "$first" in
+		*'already_authorized'*)
+			msg "== already authorized, deploying =="
+			cmd_deploy
+			return $?
+			;;
+	esac
+	while [ $i -lt 60 ]; do
+		st=$(cmd_oauth_status 2>/dev/null || echo '{"state":"failed","error":"oauth-status error"}')
+		case "$st" in
+			*'"authorized"'*)
+				msg "== authorized, deploying =="
+				cmd_deploy
+				return 0
+				;;
+			*'"expired"'*)
+				die "authorization expired (5 min) — restart the wizard step"
+				;;
+			*'"failed"'*)
+				die "oauth failed: $st"
+				;;
+		esac
+		sleep 5
+		i=$((i + 1))
+	done
+	die "timeout waiting for authorization (5 min)"
+}
+
 case "${1:-}" in
 	job)
 		shift
@@ -500,6 +846,11 @@ case "${1:-}" in
 	mark)       shift; cmd_mark "$@" ;;
 	set)        shift; cmd_set "$@" ;;
 	genkey)     genkey ;;
+	oauth-start)  cmd_oauth_start ;;
+	oauth-status) cmd_oauth_status ;;
+	oauth-clear)  cmd_oauth_clear ;;
+	deploy)       cmd_deploy ;;
+	oauth-deploy) cmd_oauth_deploy ;;
 	*)
 		cat <<'EOF'
 usage: hometunnel.sh <command>
@@ -519,6 +870,11 @@ usage: hometunnel.sh <command>
   apply-mode            apply UCI mode to init enable states
   set <key> <value>     set a global UCI option (wizard backend)
   genkey                (re)generate ctl.key
+  oauth-start           start OAuth device flow (prints QR/verify URL)
+  oauth-status          poll OAuth device flow state
+  oauth-clear           clear saved OAuth credentials
+  deploy                deploy control-plane Worker via API (needs oauth)
+  oauth-deploy          wait for oauth + deploy (wizard one-shot job)
 EOF
 		exit 1
 		;;

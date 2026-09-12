@@ -9,7 +9,13 @@ msgstr ""
 msgid " and shows an authorization URL. "
 msgstr ""
 
+msgid " on the router and follow the README inside."
+msgstr ""
+
 msgid " — change it later in Settings."
+msgstr ""
+
+msgid " — fully automatic from the router, no computer or Node.js needed."
 msgstr ""
 
 msgid "%d domains"
@@ -33,16 +39,22 @@ msgstr ""
 msgid "All checks passed. Daemon enabled. Opening status page…"
 msgstr ""
 
-msgid "Always-on mode · remote switch not used"
+msgid "Already authorized! Loading next step…"
 msgstr ""
 
 msgid "always-on"
+msgstr ""
+
+msgid "Always-on mode · remote switch not used"
 msgstr ""
 
 msgid "Any device · no app needed"
 msgstr ""
 
 msgid "Any external device"
+msgstr ""
+
+msgid "Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf. "
 msgstr ""
 
 msgid "Authorized! Loading next step…"
@@ -123,19 +135,32 @@ msgstr ""
 msgid "deleted on Cloudflare"
 msgstr ""
 
-msgid "Domain"
+msgid "Deploy failed — check output above"
 msgstr ""
 
-msgid "Done! Reloading…"
+
+msgid "Deploy Now"
+msgstr ""
+
+msgid "Deploy the switch service (a Cloudflare Worker) to "
+msgstr ""
+
+msgid "Deployed! Loading next step…"
+msgstr ""
+
+msgid "Domain"
 msgstr ""
 
 msgid "done"
 msgstr ""
 
-msgid "Download the deployment bundle, extract it on a computer with Node.js, and run "
+msgid "Done! Reloading…"
 msgstr ""
 
 msgid "Download"
+msgstr ""
+
+msgid "Download the deployment bundle, extract it on a computer with Node.js, and run "
 msgstr ""
 
 msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
@@ -180,6 +205,9 @@ msgstr ""
 msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
 msgstr ""
 
+msgid "HomeTunnel"
+msgstr ""
+
 msgid "HomeTunnel Wizard"
 msgstr ""
 
@@ -187,9 +215,6 @@ msgid "HomeTunnel — Ingress Rules"
 msgstr ""
 
 msgid "HomeTunnel — Settings"
-msgstr ""
-
-msgid "HomeTunnel"
 msgstr ""
 
 msgid "How long the tunnel stays open after \"on\". Append ?min=N to the \"on\" link to override, up to the max."
@@ -222,10 +247,10 @@ msgstr ""
 msgid "Max TTL (min)"
 msgstr ""
 
-msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
+msgid "Mode"
 msgstr ""
 
-msgid "Mode"
+msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
 msgstr ""
 
 msgid "Mode: "
@@ -246,13 +271,13 @@ msgstr ""
 msgid "ok"
 msgstr ""
 
+msgid "on"
+msgstr ""
+
 msgid "On your computer: "
 msgstr ""
 
 msgid "ON · %d min left"
-msgstr ""
-
-msgid "on"
 msgstr ""
 
 msgid "on-demand (remote switch)"
@@ -297,6 +322,9 @@ msgstr ""
 msgid "Polls commands every %ds"
 msgstr ""
 
+msgid "Prefer a computer? The classic bundle is still available: run "
+msgstr ""
+
 msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
 msgstr ""
 
@@ -315,13 +343,13 @@ msgstr ""
 msgid "Refetch"
 msgstr ""
 
+msgid "Remote Switch"
+msgstr ""
+
 msgid "Remote switch service"
 msgstr ""
 
 msgid "Remote switch state"
-msgstr ""
-
-msgid "Remote Switch"
 msgstr ""
 
 msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
@@ -340,6 +368,9 @@ msgid "Save these as bookmarks on any device to open/close the tunnel from anywh
 msgstr ""
 
 msgid "Saved! Loading next step…"
+msgstr ""
+
+msgid "Scan the QR code with your phone, or open the link, then tap Allow — that is the only manual step."
 msgstr ""
 
 msgid "Service URL"
@@ -363,6 +394,9 @@ msgstr ""
 msgid "start / stop"
 msgstr ""
 
+msgid "Start Authorization"
+msgstr ""
+
 msgid "Start Login"
 msgstr ""
 
@@ -381,9 +415,6 @@ msgstr ""
 msgid "Switch Bookmarks"
 msgstr ""
 
-msgid "Switch daemon (router)"
-msgstr ""
-
 msgid "Switch daemon"
 msgstr ""
 
@@ -393,10 +424,19 @@ msgstr ""
 msgid "Switch subdomain"
 msgstr ""
 
+msgid "The code expired (5 minutes). Click Start Authorization again."
+msgstr ""
+
+msgid "The page is served by Cloudflare and may show \"Wrangler\" — that is Cloudflare's official CLI identity and is expected."
+msgstr ""
+
 msgid "The router runs "
 msgstr ""
 
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
+msgstr ""
+
+msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑥)."
 msgstr ""
 
 msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
@@ -438,6 +478,9 @@ msgstr ""
 msgid "Turn On (%d min)"
 msgstr ""
 
+msgid "Unexpected response: %s"
+msgstr ""
+
 msgid "unknown"
 msgstr ""
 
@@ -447,22 +490,25 @@ msgstr ""
 msgid "unreachable"
 msgstr ""
 
-msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
+msgid "Verify"
 msgstr ""
 
-msgid "Verify"
+msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
 msgstr ""
 
 msgid "waiting for auth URL…"
 msgstr ""
 
+msgid "Waiting for authorization…"
+msgstr ""
+
 msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
 msgstr ""
 
-msgid "Wizard incomplete - topology pending"
+msgid "Wizard"
 msgstr ""
 
-msgid "Wizard"
+msgid "Wizard incomplete - topology pending"
 msgstr ""
 
 msgid "① Bookmark ON / OFF"
@@ -483,7 +529,13 @@ msgstr ""
 msgid "③ HTTPS"
 msgstr ""
 
+msgid "④ Authorize Switch Service"
+msgstr ""
+
 msgid "④ Ingress Rules"
+msgstr ""
+
+msgid "⑤ Ingress Rules"
 msgstr ""
 
 msgid "⑤ Publish DNS"
@@ -492,5 +544,14 @@ msgstr ""
 msgid "⑥ Deploy Remote Switch"
 msgstr ""
 
+msgid "⑥ Publish DNS"
+msgstr ""
+
+msgid "⑦ Deploy Switch Service"
+msgstr ""
+
 msgid "⑦ Verify & Finish"
+msgstr ""
+
+msgid "⑧ Verify & Finish"
 msgstr ""
