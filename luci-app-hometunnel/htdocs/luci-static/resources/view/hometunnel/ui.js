@@ -54,9 +54,13 @@ var CSS = `
 .ht-ui .btn.cbi-button-reset:hover{background:#f08c00;border-color:#f08c00;color:#fff}
 .ht-ui .btn.cbi-button-negative,.ht-ui .btn.cbi-button-remove{background:#f7531f;border-color:#f7531f;color:#fff}
 .ht-ui .btn.cbi-button-negative:hover,.ht-ui .btn.cbi-button-remove:hover{background:#e04a1a;border-color:#e04a1a;color:#fff}
-/* ---- form 页脚 Save&Apply 下拉 (div.cbi-dropdown — ngRender 同样漏映射) ---- */
-.ht-ui .cbi-dropdown.cbi-button-apply{background:#348cd4;border-color:#348cd4;color:#fff;font-weight:600}
-.ht-ui .cbi-dropdown.cbi-button-apply:hover{background:#2c77b4;color:#fff}
+/* ---- form 页脚 Save&Apply 下拉 (div.cbi-dropdown — ngRender 的 input 映射和
+ * footer.ut 的 button 映射都漏掉它, 全主题级缺口)。它由 luci.js addFooter() 在
+ * 视图渲染后追加到 #view, 位于 .ht-ui 之外; 全局规则在 SPA 下会泄漏到其他页面,
+ * 用 #view:has(.ht-ui) 锚定 —— 离开本应用后 .ht-ui 消失, 规则自动失效 ---- */
+.ht-ui .cbi-dropdown.cbi-button-apply,
+#view:has(.ht-ui) .cbi-dropdown.cbi-button-apply{background:#348cd4;border-color:#348cd4;color:#fff;font-weight:600}
+#view:has(.ht-ui) .cbi-dropdown.cbi-button-apply:hover{background:#2c77b4;color:#fff}
 /* ---- 状态徽章 label: 原 running/stopped 视觉无差异 ---- */
 .ht-ui .label{display:inline-block;padding:.22rem .68rem;border-radius:999px;font-size:12px;font-weight:600;
  white-space:nowrap;line-height:1.4;background:rgba(255,255,255,.08);color:#94a0ad}
