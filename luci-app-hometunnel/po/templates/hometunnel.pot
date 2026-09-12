@@ -3,10 +3,16 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "%d domains"
+msgstr ""
+
 msgid "(empty)"
 msgstr ""
 
 msgid "(log unavailable)"
+msgstr ""
+
+msgid "+%d more"
 msgstr ""
 
 msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
@@ -15,7 +21,25 @@ msgstr ""
 msgid "All checks passed. Daemon enabled. Opening status page…"
 msgstr ""
 
+msgid "always-on"
+msgstr ""
+
+msgid "Always-on mode · remote switch not used"
+msgstr ""
+
+msgid "Any device · no app needed"
+msgstr ""
+
+msgid "Any external device"
+msgstr ""
+
 msgid "Authorized! Loading next step…"
+msgstr ""
+
+msgid "auto-off after %dh hard cap"
+msgstr ""
+
+msgid "Auto-renew +%d min on traffic"
 msgstr ""
 
 msgid "Auto-renew amount (min)"
@@ -24,46 +48,73 @@ msgstr ""
 msgid "Auto-renew while in use"
 msgstr ""
 
-msgid "Bookmarks (phone)"
+msgid "auto-renewed"
+msgstr ""
+
+msgid "Bookmark"
+msgstr ""
+
+msgid "Browser"
 msgstr ""
 
 msgid "Bundle ready — download below"
 msgstr ""
 
+msgid "certificate rejected"
+msgstr ""
+
+msgid "Cloudflare edge network"
+msgstr ""
+
+msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
+msgstr ""
+
+msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
+msgstr ""
+
+msgid "cloudflared exited before the certificate was fetched:"
+msgstr ""
+
+msgid "cloudflared metrics port"
+msgstr ""
+
+msgid "cloudflared service syntax, e.g. <code>http://192.168.1.10:5000</code>, <code>ssh://192.168.1.10:22</code>, <code>tcp://…</code>"
+msgstr ""
+
 msgid "Connect timeout (s)"
 msgstr ""
 
-msgid "Control daemon"
+msgid "Copied ✓"
 msgstr ""
 
-msgid "Control plane state"
+msgid "Copy \"OFF\" link"
 msgstr ""
 
-msgid "Control plane:"
-msgstr ""
-
-msgid "Control-plane subdomain"
-msgstr ""
-
-msgid "Copy OFF url"
-msgstr ""
-
-msgid "Copy ON url"
-msgstr ""
-
-msgid "Create Tunnel"
+msgid "Copy \"ON\" link"
 msgstr ""
 
 msgid "Create the tunnel on your Cloudflare account (uses the authorization from step ①)."
 msgstr ""
 
+msgid "Create Tunnel"
+msgstr ""
+
 msgid "Created! Loading next step…"
+msgstr ""
+
+msgid "Data traffic"
 msgstr ""
 
 msgid "Default TTL (min)"
 msgstr ""
 
+msgid "deleted on Cloudflare"
+msgstr ""
+
 msgid "Domain"
+msgstr ""
+
+msgid "done"
 msgstr ""
 
 msgid "Done! Reloading…"
@@ -87,7 +138,19 @@ msgstr ""
 msgid "Fail-closed threshold"
 msgstr ""
 
+msgid "failed"
+msgstr ""
+
 msgid "Failed: %s"
+msgstr ""
+
+msgid "Fetch Domains"
+msgstr ""
+
+msgid "Finish the 7-step wizard to see your live topology here."
+msgstr ""
+
+msgid "Fix the issue (e.g. router DNS), reload this page and try again."
 msgstr ""
 
 msgid "Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare)."
@@ -117,16 +180,31 @@ msgstr ""
 msgid "HomeTunnel — Settings"
 msgstr ""
 
-msgid "How long the tunnel stays open after \"on\". Worker /on?min= can override up to the max."
+msgid "How long the tunnel stays open after \"on\". Append ?min=N to the \"on\" link to override, up to the max."
 msgstr ""
 
 msgid "I've deployed — Continue"
 msgstr ""
 
-msgid "Local Prometheus metrics port of cloudflared (traffic signal for auto-renew)."
+msgid "Ingress Rules"
+msgstr ""
+
+msgid "LAN"
+msgstr ""
+
+msgid "Live topology generated from your configuration."
+msgstr ""
+
+msgid "loading…"
 msgstr ""
 
 msgid "Local fuse: force-stop after this many seconds of continuous run; renewals do NOT extend it. 0 = unlimited (not recommended with auto-renew)."
+msgstr ""
+
+msgid "Local Prometheus metrics port of cloudflared (traffic signal for auto-renew)."
+msgstr ""
+
+msgid "Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). To re-choose, unbind it first."
 msgstr ""
 
 msgid "Max TTL (min)"
@@ -144,7 +222,28 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
+msgid "no hard cap"
+msgstr ""
+
+msgid "No ingress rules yet"
+msgstr ""
+
+msgid "off"
+msgstr ""
+
+msgid "ok"
+msgstr ""
+
+msgid "on"
+msgstr ""
+
 msgid "On your computer: <code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
+msgstr ""
+
+msgid "ON · %d min left"
+msgstr ""
+
+msgid "on-demand (remote switch)"
 msgstr ""
 
 msgid "On-demand parameters"
@@ -153,10 +252,13 @@ msgstr ""
 msgid "Open Ingress Rules"
 msgstr ""
 
+msgid "Open it on any device, log into Cloudflare, pick your domain and authorize."
+msgstr ""
+
 msgid "Open Wizard"
 msgstr ""
 
-msgid "Open it on any device, log into Cloudflare, pick your domain and authorize."
+msgid "OpenWrt router"
 msgstr ""
 
 msgid "Optional. Only forward matching paths, e.g. <code>^/api(/.*)?$</code>"
@@ -171,73 +273,151 @@ msgstr ""
 msgid "Path regex"
 msgstr ""
 
+msgid "Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account)."
+msgstr ""
+
 msgid "Please wait…"
 msgstr ""
 
 msgid "Poll interval (s)"
 msgstr ""
 
-msgid "Publish DNS"
+msgid "Polls commands every %ds"
 msgstr ""
 
 msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
 msgstr ""
 
+msgid "Publish DNS"
+msgstr ""
+
 msgid "QUIC is default; switch to http2 if UDP 7844 is degraded/blocked on your line."
 msgstr ""
 
-msgid "Recent daemon log"
+msgid "Recent switch daemon log"
 msgstr ""
 
-msgid "Remote on/off"
+msgid "Recommended. on-demand: tunnel closed by default, opened from outside via the remote switch. always-on: tunnel connected at boot."
+msgstr ""
+
+msgid "Refetch"
+msgstr ""
+
+msgid "Remote Switch"
+msgstr ""
+
+msgid "Remote switch service"
+msgstr ""
+
+msgid "Remote switch state"
 msgstr ""
 
 msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
 msgstr ""
 
-msgid "Save these as browser bookmarks on your phone to open/close the tunnel from anywhere:"
+msgid "Rules"
+msgstr ""
+
+msgid "running"
+msgstr ""
+
+msgid "Save Domain"
+msgstr ""
+
+msgid "Save these as bookmarks on any device to open/close the tunnel from anywhere:"
+msgstr ""
+
+msgid "Saved! Loading next step…"
 msgstr ""
 
 msgid "Service URL"
 msgstr ""
 
-msgid "Services"
+msgid "Settings"
 msgstr ""
 
 msgid "Setup is not complete. Run the wizard first."
 msgstr ""
 
-msgid "Skip TLS verify"
+msgid "Skip certificate verification for https origins (self-signed certs)."
 msgstr ""
 
-msgid "Skip certificate verification for https origins (self-signed certs)."
+msgid "Skip TLS verify"
 msgstr ""
 
 msgid "Some rules failed — check output above"
 msgstr ""
 
+msgid "start / stop"
+msgstr ""
+
 msgid "Start Login"
 msgstr ""
 
-msgid "Stop the tunnel after this many consecutive control-plane fetch failures."
+msgid "Status"
+msgstr ""
+
+msgid "Stop the tunnel after this many consecutive switch-service fetch failures."
+msgstr ""
+
+msgid "stopped"
 msgstr ""
 
 msgid "Subdomain"
 msgstr ""
 
-msgid "TTL remaining: %d min"
+msgid "Switch Bookmarks"
+msgstr ""
+
+msgid "Switch daemon"
+msgstr ""
+
+msgid "Switch daemon (router)"
+msgstr ""
+
+msgid "Switch signaling"
+msgstr ""
+
+msgid "Switch subdomain"
 msgstr ""
 
 msgid "The router runs <code>cloudflared tunnel login</code> and shows an authorization URL. "
 msgstr ""
 
-msgid "This deploys the control-plane Worker to <code>%s.%s</code> (custom domain, free tier)."
+msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
+msgstr ""
+
+msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
+msgstr ""
+
+msgid "This deploys the remote-switch service (a Cloudflare Worker) to <code>%s.%s</code> (custom domain, free tier)."
+msgstr ""
+
+msgid "Topology"
+msgstr ""
+
+msgid "Traffic (HTTPS)"
+msgstr ""
+
+msgid "TTL remaining: %d min"
 msgstr ""
 
 msgid "Tunnel name"
 msgstr ""
 
+msgid "Tunnel off · unreachable"
+msgstr ""
+
+msgid "Tunnel on Cloudflare"
+msgstr ""
+
+msgid "Tunnel process"
+msgstr ""
+
 msgid "Tunnel service"
+msgstr ""
+
+msgid "Tunnel Topology"
 msgstr ""
 
 msgid "Turn Off"
@@ -246,64 +426,34 @@ msgstr ""
 msgid "Turn On (%d min)"
 msgstr ""
 
+msgid "unknown"
+msgstr ""
+
 msgid "Unmatched hostnames/paths always return 404."
-msgstr ""
-
-msgid "Verify"
-msgstr ""
-
-msgid "Verify the control plane from the router, then enable the daemon and go to the status page."
-msgstr ""
-
-msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
-msgstr ""
-
-msgid "always-on"
-msgstr ""
-
-msgid "auto-renewed"
-msgstr ""
-
-msgid "cloudflared metrics port"
-msgstr ""
-
-msgid "cloudflared service syntax, e.g. <code>http://192.168.1.10:5000</code>, <code>ssh://192.168.1.10:22</code>, <code>tcp://…</code>"
-msgstr ""
-
-msgid "done"
-msgstr ""
-
-msgid "failed"
-msgstr ""
-
-msgid "loading…"
-msgstr ""
-
-msgid "off"
-msgstr ""
-
-msgid "on"
-msgstr ""
-
-msgid "on-demand (Worker controlled)"
-msgstr ""
-
-msgid "on-demand (recommended)"
-msgstr ""
-
-msgid "on-demand: tunnel closed by default, opened from outside via the Worker control plane. always-on: tunnel connected at boot."
-msgstr ""
-
-msgid "running"
-msgstr ""
-
-msgid "stopped"
 msgstr ""
 
 msgid "unreachable"
 msgstr ""
 
+msgid "Verify"
+msgstr ""
+
+msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
+msgstr ""
+
 msgid "waiting for auth URL…"
+msgstr ""
+
+msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
+msgstr ""
+
+msgid "Wizard"
+msgstr ""
+
+msgid "Wizard incomplete - topology pending"
+msgstr ""
+
+msgid "① Bookmark ON / OFF"
 msgstr ""
 
 msgid "① Cloudflare Authorization"
@@ -312,157 +462,13 @@ msgstr ""
 msgid "② Create Tunnel"
 msgstr ""
 
-msgid "③ Ingress Rules"
-msgstr ""
-
-msgid "④ Publish DNS"
-msgstr ""
-
-msgid "⑤ Control-plane Worker"
-msgstr ""
-
-msgid "⑥ Verify & Finish"
-msgstr ""
-
-msgid "%d domains"
-msgstr ""
-
-msgid "+%d more"
-msgstr ""
-
-msgid "Always-on mode · control plane not used"
-msgstr ""
-
-msgid "Any device · no app needed"
-msgstr ""
-
-msgid "Any external device"
-msgstr ""
-
-msgid "Auto-renew +%d min on traffic"
-msgstr ""
-
-msgid "Bookmark"
-msgstr ""
-
-msgid "Browser"
-msgstr ""
-
-msgid "Cloudflare Worker (free)"
-msgstr ""
-
-msgid "Cloudflare edge network"
-msgstr ""
-
-msgid "Control plane · switch tunnel"
-msgstr ""
-
-msgid "Control signaling (tunnel on/off)"
-msgstr ""
-
-msgid "Copied ✓"
-msgstr ""
-
-msgid "Data plane · external access"
-msgstr ""
-
-msgid "Finish the 6-step wizard to see your live topology here."
-msgstr ""
-
-msgid "LAN"
-msgstr ""
-
-msgid "Live topology generated from your configuration."
-msgstr ""
-
-msgid "No ingress rules yet"
-msgstr ""
-
-msgid "ON · %d min left"
-msgstr ""
-
-msgid "OpenWrt router"
-msgstr ""
-
-msgid "Polls /cmd every %ds"
-msgstr ""
-
-msgid "Save these as bookmarks on any device to open/close the tunnel from anywhere:"
-msgstr ""
-
-msgid "Traffic (HTTPS)"
-msgstr ""
-
-msgid "Tunnel Topology"
-msgstr ""
-
-msgid "Tunnel off · unreachable"
-msgstr ""
-
-msgid "Wizard incomplete - topology pending"
-msgstr ""
-
-msgid "auto-off after %dh hard cap"
-msgstr ""
-
-msgid "ctl-loop daemon"
-msgstr ""
-
-msgid "no hard cap"
-msgstr ""
-
-msgid "start / stop"
-msgstr ""
-
-msgid "tunnel data engine"
-msgstr ""
-
-msgid "① Bookmark ON / OFF"
-msgstr ""
-
 msgid "② Poll commands"
 msgstr ""
 
-msgid "③ HTTPS"
-msgstr ""
-
-msgid "Status"
-msgstr ""
-
-msgid "Topology"
-msgstr ""
-
-msgid "Wizard"
-msgstr ""
-
-msgid "Ingress Rules"
-msgstr ""
-
-msgid "Settings"
-msgstr ""
-
-msgid "Fetch Domains"
-msgstr ""
-
-msgid "Fix the issue (e.g. router DNS), reload this page and try again."
-msgstr ""
-
-msgid "Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account)."
-msgstr ""
-
-msgid "Refetch"
-msgstr ""
-
-msgid "Save Domain"
-msgstr ""
-
-msgid "Saved! Loading next step…"
-msgstr ""
-
-msgid "cloudflared exited before the certificate was fetched:"
-msgstr ""
-
 msgid "③ Choose Domain"
+msgstr ""
+
+msgid "③ HTTPS"
 msgstr ""
 
 msgid "④ Ingress Rules"
@@ -471,38 +477,8 @@ msgstr ""
 msgid "⑤ Publish DNS"
 msgstr ""
 
-msgid "⑥ Control-plane Worker"
+msgid "⑥ Deploy Remote Switch"
 msgstr ""
 
 msgid "⑦ Verify & Finish"
-msgstr ""
-
-msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
-msgstr ""
-
-msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
-msgstr ""
-
-msgid "Tunnel on Cloudflare"
-msgstr ""
-
-msgid "certificate rejected"
-msgstr ""
-
-msgid "deleted on Cloudflare"
-msgstr ""
-
-msgid "ok"
-msgstr ""
-
-msgid "unknown"
-msgstr ""
-
-msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
-msgstr ""
-
-msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
-msgstr ""
-
-msgid "Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). Run Cleanup (in wizard) to unbind and re-choose."
 msgstr ""

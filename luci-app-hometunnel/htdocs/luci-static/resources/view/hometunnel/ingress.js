@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Copyright (C) 2026 xiaoqingfeng <xiaoqingfeng@yeah.net> */
-/* hometunnel ingress — 内网服务规则（UCI → config.yml） */
+/* hometunnel ingress — 接入规则（UCI → config.yml） */
 
 'use strict';
 'require form';
@@ -16,7 +16,7 @@ return view.extend({
 			_('Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. ') +
 			_('Unmatched hostnames/paths always return 404.'));
 
-		s = m.section(form.GridSection, 'ingress', _('Services'));
+		s = m.section(form.GridSection, 'ingress', _('Rules'));
 		s.addremove = true;
 		s.anonymous = true;
 		s.sortable = true;

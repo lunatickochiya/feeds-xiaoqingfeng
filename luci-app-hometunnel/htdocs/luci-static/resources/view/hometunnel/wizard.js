@@ -98,7 +98,7 @@ return view.extend({
 			_('③ Choose Domain'),
 			_('④ Ingress Rules'),
 			_('⑤ Publish DNS'),
-			_('⑥ Control-plane Worker'),
+			_('⑥ Deploy Remote Switch'),
 			_('⑦ Verify & Finish')
 		];
 
@@ -377,7 +377,7 @@ return view.extend({
 		var domain = uci.get('hometunnel', 'global', 'domain');
 		body.appendChild(E('p', {}, [
 			_('Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. ') +
-			_('This deploys the control-plane Worker to <code>%s.%s</code> (custom domain, free tier).')
+			_('This deploys the remote-switch service (a Cloudflare Worker) to <code>%s.%s</code> (custom domain, free tier).')
 				.format(uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl', domain)
 		]));
 
@@ -434,7 +434,7 @@ return view.extend({
 	step7: function (body) {
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		body.appendChild(E('p', {},
-			_('Verify the control plane from the router, then enable the daemon and go to the status page.')));
+			_('Verify the remote switch from the router, then enable the daemon and go to the status page.')));
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Verify'));
 		var out = E('pre', { 'style': 'max-height:150px;overflow:auto;font-size:12px' }, '');

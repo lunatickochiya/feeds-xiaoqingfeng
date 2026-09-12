@@ -8,7 +8,7 @@ set -e
 
 cd "$(dirname "$0")"
 
-echo "== hometunnel control-plane worker deploy =="
+echo "== hometunnel remote-switch (Cloudflare Worker) deploy =="
 echo "   target: @@CTL_HOSTNAME@@.@@DOMAIN@@"
 
 if ! command -v npx >/dev/null 2>&1; then

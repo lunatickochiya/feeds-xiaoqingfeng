@@ -23,8 +23,8 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.option(form.ListValue, 'mode', _('Mode'),
-			_('on-demand: tunnel closed by default, opened from outside via the Worker control plane. always-on: tunnel connected at boot.'));
-		o.value('ondemand', _('on-demand (recommended)'));
+			_('Recommended. on-demand: tunnel closed by default, opened from outside via the remote switch. always-on: tunnel connected at boot.'));
+		o.value('ondemand', _('on-demand (remote switch)'));
 		o.value('alwayson', _('always-on'));
 		o.default = 'ondemand';
 		o.rmempty = false;
@@ -40,8 +40,8 @@ return view.extend({
 		o.rmempty = false;
 		o.readonly = true;
 
-		o = s.option(form.Value, 'ctl_hostname', _('Control-plane subdomain'),
-			_('Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). Run Cleanup (in wizard) to unbind and re-choose.'));
+		o = s.option(form.Value, 'ctl_hostname', _('Switch subdomain'),
+			_('Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). To re-choose, unbind it first.'));
 		o.placeholder = 'ctl';
 		o.rmempty = false;
 		o.readonly = true;
@@ -49,7 +49,7 @@ return view.extend({
 		s = m.section(form.NamedSection, 'global', 'hometunnel', _('On-demand parameters'));
 
 		o = s.option(form.Value, 'default_ttl', _('Default TTL (min)'),
-			_('How long the tunnel stays open after "on". Worker /on?min= can override up to the max.'));
+			_('How long the tunnel stays open after "on". Append ?min=N to the "on" link to override, up to the max.'));
 		o.placeholder = '45';
 		o.datatype = 'range(1,1440)';
 		o.rmempty = false;
@@ -82,7 +82,7 @@ return view.extend({
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'fail_threshold', _('Fail-closed threshold'),
-			_('Stop the tunnel after this many consecutive control-plane fetch failures.'));
+			_('Stop the tunnel after this many consecutive switch-service fetch failures.'));
 		o.placeholder = '3';
 		o.datatype = 'range(1,10)';
 		o.rmempty = false;

@@ -135,17 +135,17 @@ return view.extend({
 				]),
 				E('tr', { 'class': 'tr' }, [
 					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Mode'))),
-					E('td', { 'class': 'td left' }, mode === 'ondemand' ? _('on-demand (Worker controlled)') : _('always-on'))
+					E('td', { 'class': 'td left' }, mode === 'ondemand' ? _('on-demand (remote switch)') : _('always-on'))
 				])
 			]);
 
 			if (mode === 'ondemand') {
 				table.appendChild(E('tr', { 'class': 'tr' }, [
-					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Control daemon'))),
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Switch daemon'))),
 					E('td', { 'class': 'td left', 'id': 'ht-ctl-svc' }, label(ctlRunning))
 				]));
 				table.appendChild(E('tr', { 'class': 'tr' }, [
-					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Control plane state'))),
+					E('td', { 'class': 'td left', 'width': '30%' }, E('strong', {}, _('Remote switch state'))),
 					E('td', { 'class': 'td left', 'id': 'ht-ctl-state' }, this.fmtCtlState(ctlJson))
 				]));
 			}
@@ -193,15 +193,15 @@ return view.extend({
 				};
 
 				container.appendChild(E('div', { 'class': 'cbi-section' }, [
-					E('h3', {}, _('Remote on/off')),
+					E('h3', {}, _('Remote Switch')),
 					E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap' }, [btnOn, btnOff]),
 					resultDiv,
-					E('h3', {}, _('Bookmarks (phone)')),
+					E('h3', {}, _('Switch Bookmarks')),
 					E('div', { 'class': 'cbi-section-descr' },
-						_('Save these as browser bookmarks on your phone to open/close the tunnel from anywhere:')),
+						_('Save these as bookmarks on any device to open/close the tunnel from anywhere:')),
 					E('div', { 'style': 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, [
-						E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, onUrl) }, _('Copy ON url')),
-						E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, offUrl) }, _('Copy OFF url'))
+						E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, onUrl) }, _('Copy "ON" link')),
+						E('button', { 'class': 'btn cbi-button', 'click': copyBtn.bind(this, offUrl) }, _('Copy "OFF" link'))
 					]),
 					E('div', { 'style': 'margin-top:6px;word-break:break-all;font-size:12px' }, [
 						E('div', {}, onUrl),
@@ -213,7 +213,7 @@ return view.extend({
 			/* ---- 守护日志 ---- */
 			var logDiv = E('pre', { 'class': 'cbi-input-textarea', 'style': 'overflow:auto;max-height:220px;font-size:12px', 'id': 'ht-log' }, _('loading…'));
 			container.appendChild(E('div', { 'class': 'cbi-section' }, [
-				E('h3', {}, _('Recent daemon log')),
+				E('h3', {}, _('Recent switch daemon log')),
 				logDiv
 			]));
 

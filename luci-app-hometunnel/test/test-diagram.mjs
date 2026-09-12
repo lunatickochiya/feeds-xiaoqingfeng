@@ -138,7 +138,7 @@ async function render(uci, status, key) {
 	const c = await render(baseUci({ mode: 'alwayson' }), '', null);
 	const svgs = collectSvg(c).join('\n');
 	check('s3 control band dimmed', svgs.includes('opacity="0.38"'));
-	check('s3 always-on note', svgs.includes('Always-on mode · control plane not used'));
+	check('s3 always-on note', svgs.includes('Always-on mode · remote switch not used'));
 	check('s3 data color green', svgs.includes('stroke="#059669" stroke-width="3"'));
 	check('s3 no badge', !/>OFF</.test(svgs) && !/ON ·/.test(svgs));
 	check('s3 no url section', !serialize(c).includes('/on?key='));

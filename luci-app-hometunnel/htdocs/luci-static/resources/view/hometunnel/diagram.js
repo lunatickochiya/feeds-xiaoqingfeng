@@ -90,10 +90,10 @@ function buildSvg(cfg, st) {
 	var ctlOp = always ? ' opacity="0.38"' : '';
 	s += '<rect x="16" y="46" width="1028" height="234" rx="12" fill="#eff6ff"' + ctlOp + '/>';
 	s += '<rect x="16" y="336" width="1028" height="268" rx="12" fill="#ecfdf5"/>';
-	s += '<text x="34" y="72" font-size="13" font-weight="700" fill="#60a5fa">' + esc(_('Control plane · switch tunnel')) + '</text>';
-	s += '<text x="34" y="362" font-size="13" font-weight="700" fill="#34d399">' + esc(_('Data plane · external access')) + '</text>';
+	s += '<text x="34" y="72" font-size="13" font-weight="700" fill="#60a5fa">' + esc(_('Remote Switch')) + '</text>';
+	s += '<text x="34" y="362" font-size="13" font-weight="700" fill="#34d399">' + esc(_('Data traffic')) + '</text>';
 	if (always)
-		s += '<text x="530" y="72" font-size="12" fill="#94a3b8" text-anchor="middle">' + esc(_('Always-on mode · control plane not used')) + '</text>';
+		s += '<text x="530" y="72" font-size="12" fill="#94a3b8" text-anchor="middle">' + esc(_('Always-on mode · remote switch not used')) + '</text>';
 
 	/* 手机（控制面入口，任意设备书签） */
 	s += '<g' + (always ? ' opacity="0.38"' : '') + '>'
@@ -109,7 +109,7 @@ function buildSvg(cfg, st) {
 
 	/* Worker 云 */
 	s += cloud(438, 168, '#fff', always ? GRAY : BLUE);
-	s += '<text x="438" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">' + esc(_('Cloudflare Worker (free)')) + '</text>';
+	s += '<text x="438" y="102" text-anchor="middle" font-size="13" font-weight="700" fill="#334155">' + esc(_('Remote switch service')) + '</text>';
 	s += '<text x="438" y="176" text-anchor="middle" font-size="13.5" font-weight="700" fill="' + (always ? GRAY : BLUE) + '">' + esc(cfg.ctlDomain) + '</text>';
 	if (!always) {
 		var btxt = st.on ? _('ON · %d min left').format(st.remainMin) : 'OFF';
@@ -122,8 +122,8 @@ function buildSvg(cfg, st) {
 		+ '<line x1="836" y1="108" x2="852" y2="80" stroke="#334155" stroke-width="2"/><circle cx="852" cy="78" r="4" fill="#334155"/>'
 		+ '<text x="765" y="136" text-anchor="middle" font-size="13.5" font-weight="700" fill="#334155">' + esc(_('OpenWrt router')) + '</text>'
 		+ '<rect x="682" y="152" width="166" height="60" rx="8" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.5"/>'
-		+ '<text x="765" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">' + esc(_('ctl-loop daemon')) + '</text>'
-		+ '<text x="765" y="196" text-anchor="middle" font-size="11" fill="#64748b">' + esc(_('Polls /cmd every %ds').format(cfg.pollIv)) + '</text>';
+		+ '<text x="765" y="176" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1d4ed8">' + esc(_('Switch daemon')) + '</text>'
+		+ '<text x="765" y="196" text-anchor="middle" font-size="11" fill="#64748b">' + esc(_('Polls commands every %ds').format(cfg.pollIv)) + '</text>';
 
 	var cfStroke = active ? GREEN : '#cbd5e1',
 	    cfFill = active ? '#d1fae5' : '#f8fafc',
@@ -131,7 +131,7 @@ function buildSvg(cfg, st) {
 	s += '<g' + (active ? ' class="dg-pulse"' : '') + '>'
 		+ '<rect x="682" y="384" width="166" height="60" rx="8" fill="' + cfFill + '" stroke="' + cfStroke + '" stroke-width="2"/></g>'
 		+ '<text x="765" y="408" text-anchor="middle" font-size="12.5" font-weight="700" fill="' + cfText + '">cloudflared</text>'
-		+ '<text x="765" y="428" text-anchor="middle" font-size="11" fill="' + cfText + '">' + esc(_('tunnel data engine')) + '</text>'
+		+ '<text x="765" y="428" text-anchor="middle" font-size="11" fill="' + cfText + '">' + esc(_('Tunnel process')) + '</text>'
 		+ '<line x1="765" y1="216" x2="765" y2="378" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#dg-aG)"/>'
 		+ '<text x="776" y="300" font-size="11" fill="#64748b">' + esc(_('start / stop')) + '</text>';
 
@@ -205,7 +205,7 @@ function placeholderSvg() {
 		+ '</g>'
 		+ '<rect x="330" y="250" width="400" height="120" rx="12" fill="#fff" stroke="#f59e0b" stroke-width="2"/>'
 		+ '<text x="530" y="296" text-anchor="middle" font-size="16" font-weight="700" fill="#b45309">' + esc(_('Wizard incomplete - topology pending')) + '</text>'
-		+ '<text x="530" y="326" text-anchor="middle" font-size="12.5" fill="#92400e">' + esc(_('Finish the 6-step wizard to see your live topology here.')) + '</text>'
+		+ '<text x="530" y="326" text-anchor="middle" font-size="12.5" fill="#92400e">' + esc(_('Finish the 7-step wizard to see your live topology here.')) + '</text>'
 		+ '</svg>';
 }
 
@@ -294,7 +294,7 @@ return view.extend({
 			E('div', {
 				'style': 'display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:#64748b'
 			}, [
-				E('span', {}, [E('b', { 'style': 'color:#2563eb' }, '●'), ' ' + _('Control signaling (tunnel on/off)')]),
+				E('span', {}, [E('b', { 'style': 'color:#2563eb' }, '●'), ' ' + _('Switch signaling')]),
 				E('span', {}, [E('b', { 'style': 'color:#059669' }, '●'), ' ' + _('Traffic (HTTPS)')]),
 				E('span', {}, '↻ ' + _('Auto-renew +%d min on traffic').format(cfg.ttl)),
 				E('span', {}, '⏹ ' + capText)
@@ -335,11 +335,11 @@ return view.extend({
 				};
 
 				container.appendChild(E('div', { 'class': 'cbi-section' }, [
-					E('h3', {}, _('Remote on/off')),
+					E('h3', {}, _('Remote Switch')),
 					E('div', { 'class': 'cbi-section-descr' },
 						_('Save these as bookmarks on any device to open/close the tunnel from anywhere:')),
-					mkUrlRow(onUrl, _('Copy ON url')),
-					mkUrlRow(offUrl, _('Copy OFF url'))
+					mkUrlRow(onUrl, _('Copy "ON" link')),
+					mkUrlRow(offUrl, _('Copy "OFF" link'))
 				]));
 			}
 
