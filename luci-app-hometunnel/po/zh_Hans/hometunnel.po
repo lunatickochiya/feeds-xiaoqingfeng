@@ -504,3 +504,6 @@ msgstr "Cloudflare 拒绝了已保存的证书。请先重新执行第 ① 步�
 
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
 msgstr "隧道已在 Cloudflare 侧被删除。点击下方“创建”将自动重建（新隧道 ID，第 ⑤ 步会重新发布 DNS 路由）。"
+
+msgid "Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). Run Cleanup (in wizard) to unbind and re-choose."
+msgstr "绑定后锁定（路由器重装后 Cloudflare 授权丢失时，会退回可编辑状态）。如需更换，请在向导中执行 Cleanup 解除绑定。"

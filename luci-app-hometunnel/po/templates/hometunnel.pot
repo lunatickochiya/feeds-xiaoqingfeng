@@ -503,3 +503,6 @@ msgstr ""
 
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
 msgstr ""
+
+msgid "Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). Run Cleanup (in wizard) to unbind and re-choose."
+msgstr ""

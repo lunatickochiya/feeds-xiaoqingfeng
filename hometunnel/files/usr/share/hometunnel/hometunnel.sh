@@ -63,9 +63,14 @@ cmd_set() {
 		domain|ctl_hostname|tunnel_name)
 			# 绑定后不可变（ingress hostname/DNS CNAME/Worker route 派生自它们）。
 			# 修改 = 断链；需先 cleanup 解绑。
-			cur=$(get_ "$key" '')
-			if [ -n "$cur" ]; then
-				die "$key already bound to '$cur' — run 'hometunnel.sh cleanup' to unbind first"
+			# 例外: cert.pem 不存在（重装路由器后恢复了 UCI 备份但授权丢失）→
+			# 视为未绑定，允许重新选域名（create 自愈会重建隧道，route 加
+			# --overwrite-dns 覆盖旧 CNAME，重装场景全链路可恢复）
+			if [ -f "$ETC/.cloudflared/cert.pem" ]; then
+				cur=$(get_ "$key" '')
+				if [ -n "$cur" ]; then
+					die "$key already bound to '$cur' — run 'hometunnel.sh cleanup' to unbind first"
+				fi
 			fi
 			[ -n "$val" ] || die "$key cannot be empty"
 			;;
@@ -222,7 +227,7 @@ cmd_route() {
 			subdomain=$(uci -q get "hometunnel.@ingress[$i].subdomain" || echo '')
 			if [ -n "$subdomain" ]; then
 				hostname="$subdomain.$domain"
-				out=$(cf_run tunnel route dns "$name" "$hostname" 2>&1)
+				out=$(cf_run tunnel route dns --overwrite-dns "$name" "$hostname" 2>&1)
 				cmd_rc=$?
 				case "$out" in
 					*"Already routed"*|*"already exists"*)

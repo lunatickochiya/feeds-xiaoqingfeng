@@ -408,6 +408,16 @@ CLEANRC=$?
 OUT=$("$WORK/ht-test.sh" set domain newdomain.com 2>&1)
 echo "$OUT" | grep -q "OK: domain saved" && ok "6e domain can be set after unbind" || bad "6e re-set failed: $OUT"
 
+# 6f. 重装恢复: cert.pem 丢失（授权没了）→ 绑定锁失效，可重新选域名
+mv "$FAKE_ROOT/etc/hometunnel/.cloudflared/cert.pem" "$WORK/cert.pem.bak"
+printf 'domain=stillon.com\n' >> "$HTTEST_UCI_STATE"
+OUT=$("$WORK/ht-test.sh" set domain freshpick.com 2>&1)
+echo "$OUT" | grep -q "OK: domain saved" && ok "6f lock bypassed without cert.pem (reinstall recovery)" || bad "6f expected bypass, got: $OUT"
+# cert.pem 回来后锁恢复
+mv "$WORK/cert.pem.bak" "$FAKE_ROOT/etc/hometunnel/.cloudflared/cert.pem"
+OUT=$("$WORK/ht-test.sh" set domain another.com 2>&1)
+echo "$OUT" | grep -q "already bound" && ok "6f lock re-engages with cert.pem present" || bad "6f expected lock, got: $OUT"
+
 kill $CFPID 2>/dev/null
 echo
 echo "===== e2e result: $pass passed, $fail failed ====="

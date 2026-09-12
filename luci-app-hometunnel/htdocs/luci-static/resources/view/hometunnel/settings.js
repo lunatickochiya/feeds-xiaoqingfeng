@@ -40,7 +40,7 @@ return view.extend({
 		o.readonly = true;
 
 		o = s.option(form.Value, 'ctl_hostname', _('Control-plane subdomain'),
-			_('Locked after binding. Run Cleanup (in wizard) to unbind and re-choose.'));
+			_('Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). Run Cleanup (in wizard) to unbind and re-choose.'));
 		o.placeholder = 'ctl';
 		o.rmempty = false;
 		o.readonly = true;
