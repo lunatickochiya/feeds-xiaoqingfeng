@@ -74,7 +74,7 @@ return view.extend({
 			var cfState = parseCfState(backendStatus);
 
 			var descrChildren = [
-				E('span', { 'class': 'dripicons-cloud', 'style': 'font-size:16px;margin-right:8px;vertical-align:-2px' }),
+				E('span', { 'class': 'dripicons-cloud', 'style': 'font-size:16px;margin-right:8px;vertical-align:-2px;color:#348cd4' }),
 				_('HomeLede intranet exposure via a free Cloudflare Tunnel.')
 			];
 			if (ctlUrl) {
@@ -85,7 +85,13 @@ return view.extend({
 
 			var container = E('div', {}, [
 				E('h2', {}, _('HomeTunnel')),
-				E('div', { 'class': 'alert alert-info d-flex align-items-center flex-wrap', 'style': 'gap:.5rem' }, descrChildren)
+				E('div', {
+					'class': 'd-flex align-items-center flex-wrap',
+					'style': 'gap:.5rem;padding:.6rem 1rem;border-radius:.5rem;'
+						+ 'background-color:rgba(52,140,212,.1);'
+						+ 'border:1px solid rgba(52,140,212,.25);'
+						+ 'color:inherit'
+				}, descrChildren)
 			]);
 
 			if (!configured) {
