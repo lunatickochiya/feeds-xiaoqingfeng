@@ -39,9 +39,11 @@ return view.extend({
 		o.rmempty = false;
 		o.readonly = true;
 
-		o = s.option(form.Value, 'ctl_hostname', _('Control-plane subdomain'));
+		o = s.option(form.Value, 'ctl_hostname', _('Control-plane subdomain'),
+			_('Locked after binding. Run Cleanup (in wizard) to unbind and re-choose.'));
 		o.placeholder = 'ctl';
 		o.rmempty = false;
+		o.readonly = true;
 
 		s = m.section(form.NamedSection, 'global', 'hometunnel', _('On-demand parameters'));
 

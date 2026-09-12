@@ -63,7 +63,7 @@ trap cleanup EXIT INT TERM
 # ---------- 布景 1: 假 UCI shim ----------
 cat > "$FAKE_ROOT/usr/bin/uci" <<'EOF'
 #!/bin/sh
-# 假 uci: hometunnel.global.<opt> get/set/delete，get 读 env HTTEST_ 或状态文件，set 写状态文件
+# 假 uci: hometunnel.global.<opt> get/set/delete；get 先读状态文件，缺失回退 env HTTEST_
 USTATE="${HTTEST_UCI_STATE:-/tmp/ht-e2e-uci-state}"
 args=""
 for a in "$@"; do
@@ -335,6 +335,7 @@ CFPID=$!
 
 # hometunnel.sh 测试副本: 路径改写到 FAKE_ROOT, CF API 指向本地假服务
 OLDID="11111111-2222-3333-4444-555555555555"
+NEWID_FILE="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.json"
 CFDIR="$FAKE_ROOT/etc/hometunnel/.cloudflared"
 mkdir -p "$CFDIR"
 printf '{"AccountTag":"acct","TunnelSecret":"s0","TunnelID":"%s"}\n' "$OLDID" > "$CFDIR/$OLDID.json"
@@ -359,7 +360,7 @@ printf -- '-----BEGIN ARGO TUNNEL TOKEN-----\n%s\n-----END ARGO TUNNEL TOKEN----
 
 # 6a. 正常态: CF 200 + 凭据在 → "already exists" 幂等
 echo 200 > "$CF_FLAG"
-export HTTEST_tunnel_id="$OLDID"
+printf 'tunnel_id=%s\ndomain=example.com\nctl_hostname=ctl\n' "$OLDID" >> "$HTTEST_UCI_STATE"
 OUT=$("$WORK/ht-test.sh" create 2>&1)
 echo "$OUT" | grep -q "already exists" && ok "6a idempotent when healthy" || bad "6a expected 'already exists', got: $OUT"
 
@@ -385,6 +386,27 @@ echo "$OUT" | grep -q "cf-tunnel: exists" && ok "6d check reports exists" || bad
 echo 404 > "$CF_FLAG"
 OUT=$("$WORK/ht-test.sh" check 2>&1)
 echo "$OUT" | grep -q "cf-tunnel: missing" && ok "6d check reports missing" || bad "6d check unexpected: $OUT"
+
+# 6e. 绑定后 set domain 被拒（不可变约定）+ cleanup 解绑重绑
+OUT=$("$WORK/ht-test.sh" set domain other.com 2>&1)
+echo "$OUT" | grep -q "already bound" && ok "6e set domain locked after bind" || bad "6e expected lock, got: $OUT"
+# 值未变
+[ "$(grep '^domain=' "$HTTEST_UCI_STATE" | tail -n1 | cut -d= -f2-)" = "example.com" ] \
+	&& ok "6e domain unchanged" || bad "6e domain was modified!"
+# cleanup 解绑: 删 tunnel + 清 domain/tunnel_id + 重置向导标记
+echo 200 > "$CF_FLAG"
+printf 'DELETE\n' | "$WORK/ht-test.sh" cleanup > /dev/null 2>&1
+CLEANRC=$?
+[ "$CLEANRC" -eq 0 ] && ok "6e cleanup rc=0" || bad "6e cleanup rc=$CLEANRC"
+[ -z "$(grep '^domain=' "$HTTEST_UCI_STATE" | tail -n1 | cut -d= -f2-)" ] \
+	&& ok "6e domain cleared from UCI" || bad "6e domain still set after cleanup"
+[ -z "$(grep '^tunnel_id=' "$HTTEST_UCI_STATE" | tail -n1 | cut -d= -f2-)" ] \
+	&& ok "6e tunnel_id cleared from UCI" || bad "6e tunnel_id still set after cleanup"
+[ ! -f "$CFDIR/$OLDID.json" ] && [ ! -f "$CFDIR/$NEWID_FILE" ] && ok "6e all tunnel creds removed" \
+	|| bad "6e credentials left behind: $(ls "$CFDIR" 2>/dev/null | tr '\n' ' ')"
+# 解绑后 domain 可重新设置
+OUT=$("$WORK/ht-test.sh" set domain newdomain.com 2>&1)
+echo "$OUT" | grep -q "OK: domain saved" && ok "6e domain can be set after unbind" || bad "6e re-set failed: $OUT"
 
 kill $CFPID 2>/dev/null
 echo

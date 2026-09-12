@@ -56,11 +56,20 @@ cmd_mark() {
 
 # set <key> <value> — 向导轻量写 UCI（仅限 global 段已知键）
 cmd_set() {
-	local key val
+	local key val cur
 	key="${1:-}"
 	val="${2:-}"
 	case "$key" in
-		domain|ctl_hostname|tunnel_name|default_ttl|hard_cap)
+		domain|ctl_hostname|tunnel_name)
+			# 绑定后不可变（ingress hostname/DNS CNAME/Worker route 派生自它们）。
+			# 修改 = 断链；需先 cleanup 解绑。
+			cur=$(get_ "$key" '')
+			if [ -n "$cur" ]; then
+				die "$key already bound to '$cur' — run 'hometunnel.sh cleanup' to unbind first"
+			fi
+			[ -n "$val" ] || die "$key cannot be empty"
+			;;
+		default_ttl|hard_cap)
 			;;
 		*)
 			die "refusing to set unknown key: $key"
@@ -430,7 +439,13 @@ cmd_cleanup() {
 		cf_run tunnel delete "$id" 2>&1 || msg "WARN: tunnel delete failed (delete in CF dashboard)"
 	fi
 	rm -f "$ETC/config.yml" "$KEY_FILE"
-	msg "local config cleaned. UCI values kept (uci revert hometunnel to restore defaults)"
+	rm -f "$ETC/.cloudflared/"*.json
+	rm -f "$RUNDIR/dns-routed" "$RUNDIR/worker-verified" "$RUNDIR/worker-deployed"
+	uci -q delete "$UCI_CONF.global.tunnel_id"
+	uci -q delete "$UCI_CONF.global.domain"
+	uci commit "$UCI_CONF"
+	msg "unbound: tunnel deleted, domain cleared, wizard marks reset."
+	msg "ingress rules kept (subdomains only, hostnames re-computed on rebind); cert.pem kept (Cloudflare authorization survives)."
 }
 
 cmd_apply_mode() {
