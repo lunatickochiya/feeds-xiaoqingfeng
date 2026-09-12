@@ -4,6 +4,7 @@
 
 'use strict';
 'require form';
+'require fs';
 'require uci';
 'require view';
 'require view.hometunnel.ui as htui';

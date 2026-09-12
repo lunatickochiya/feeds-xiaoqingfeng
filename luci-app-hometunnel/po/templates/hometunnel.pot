@@ -3,6 +3,15 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid " (custom domain, free tier)."
+msgstr ""
+
+msgid " and shows an authorization URL. "
+msgstr ""
+
+msgid " — change it later in Settings."
+msgstr ""
+
 msgid "%d domains"
 msgstr ""
 
@@ -15,16 +24,19 @@ msgstr ""
 msgid "+%d more"
 msgstr ""
 
+msgid ". "
+msgstr ""
+
 msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
 msgstr ""
 
 msgid "All checks passed. Daemon enabled. Opening status page…"
 msgstr ""
 
-msgid "always-on"
+msgid "Always-on mode · remote switch not used"
 msgstr ""
 
-msgid "Always-on mode · remote switch not used"
+msgid "always-on"
 msgstr ""
 
 msgid "Any device · no app needed"
@@ -114,16 +126,16 @@ msgstr ""
 msgid "Domain"
 msgstr ""
 
-msgid "done"
-msgstr ""
-
 msgid "Done! Reloading…"
 msgstr ""
 
-msgid "Download"
+msgid "done"
 msgstr ""
 
-msgid "Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. "
+msgid "Download the deployment bundle, extract it on a computer with Node.js, and run "
+msgstr ""
+
+msgid "Download"
 msgstr ""
 
 msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
@@ -168,9 +180,6 @@ msgstr ""
 msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
 msgstr ""
 
-msgid "HomeTunnel"
-msgstr ""
-
 msgid "HomeTunnel Wizard"
 msgstr ""
 
@@ -178,6 +187,9 @@ msgid "HomeTunnel — Ingress Rules"
 msgstr ""
 
 msgid "HomeTunnel — Settings"
+msgstr ""
+
+msgid "HomeTunnel"
 msgstr ""
 
 msgid "How long the tunnel stays open after \"on\". Append ?min=N to the \"on\" link to override, up to the max."
@@ -210,13 +222,13 @@ msgstr ""
 msgid "Max TTL (min)"
 msgstr ""
 
-msgid "Mode"
-msgstr ""
-
 msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
 msgstr ""
 
-msgid "Mode: <code>%s</code> — change it later in Settings."
+msgid "Mode"
+msgstr ""
+
+msgid "Mode: "
 msgstr ""
 
 msgid "Name"
@@ -234,13 +246,13 @@ msgstr ""
 msgid "ok"
 msgstr ""
 
-msgid "on"
-msgstr ""
-
-msgid "On your computer: <code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
+msgid "On your computer: "
 msgstr ""
 
 msgid "ON · %d min left"
+msgstr ""
+
+msgid "on"
 msgstr ""
 
 msgid "on-demand (remote switch)"
@@ -303,13 +315,13 @@ msgstr ""
 msgid "Refetch"
 msgstr ""
 
-msgid "Remote Switch"
-msgstr ""
-
 msgid "Remote switch service"
 msgstr ""
 
 msgid "Remote switch state"
+msgstr ""
+
+msgid "Remote Switch"
 msgstr ""
 
 msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
@@ -369,10 +381,10 @@ msgstr ""
 msgid "Switch Bookmarks"
 msgstr ""
 
-msgid "Switch daemon"
+msgid "Switch daemon (router)"
 msgstr ""
 
-msgid "Switch daemon (router)"
+msgid "Switch daemon"
 msgstr ""
 
 msgid "Switch signaling"
@@ -381,7 +393,7 @@ msgstr ""
 msgid "Switch subdomain"
 msgstr ""
 
-msgid "The router runs <code>cloudflared tunnel login</code> and shows an authorization URL. "
+msgid "The router runs "
 msgstr ""
 
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
@@ -390,7 +402,7 @@ msgstr ""
 msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
 msgstr ""
 
-msgid "This deploys the remote-switch service (a Cloudflare Worker) to <code>%s.%s</code> (custom domain, free tier)."
+msgid "This deploys the remote-switch service (a Cloudflare Worker) to "
 msgstr ""
 
 msgid "Topology"
@@ -435,10 +447,10 @@ msgstr ""
 msgid "unreachable"
 msgstr ""
 
-msgid "Verify"
+msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
 msgstr ""
 
-msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
+msgid "Verify"
 msgstr ""
 
 msgid "waiting for auth URL…"
@@ -447,10 +459,10 @@ msgstr ""
 msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
 msgstr ""
 
-msgid "Wizard"
+msgid "Wizard incomplete - topology pending"
 msgstr ""
 
-msgid "Wizard incomplete - topology pending"
+msgid "Wizard"
 msgstr ""
 
 msgid "① Bookmark ON / OFF"

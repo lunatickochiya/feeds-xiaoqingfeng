@@ -159,7 +159,8 @@ return view.extend({
 	/* ---- 步骤 1: cloudflared tunnel login ---- */
 	step1: function (body) {
 		body.appendChild(E('p', {}, [
-			_('The router runs <code>cloudflared tunnel login</code> and shows an authorization URL. ') +
+			_('The router runs '), E('code', {}, 'cloudflared tunnel login'),
+			_(' and shows an authorization URL. ') +
 			_('Open it on any device, log into Cloudflare, pick your domain and authorize.')
 		]));
 
@@ -376,9 +377,11 @@ return view.extend({
 	step6: function (body) {
 		var domain = uci.get('hometunnel', 'global', 'domain');
 		body.appendChild(E('p', {}, [
-			_('Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. ') +
-			_('This deploys the remote-switch service (a Cloudflare Worker) to <code>%s.%s</code> (custom domain, free tier).')
-				.format(uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl', domain)
+			_('Download the deployment bundle, extract it on a computer with Node.js, and run '), E('code', {}, './deploy.sh'),
+			_('. ') +
+			_('This deploys the remote-switch service (a Cloudflare Worker) to ') +
+			E('code', {}, (uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl') + '.' + domain) +
+			_(' (custom domain, free tier).')
 		]));
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Generate Bundle'));
@@ -419,8 +422,9 @@ return view.extend({
 		});
 		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn, ' ', link]));
 
-		body.appendChild(E('p', { 'class': 'cbi-section-descr' },
-			_('On your computer: <code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>').format(domain)));
+		body.appendChild(E('p', { 'class': 'cbi-section-descr' }, [
+			_('On your computer: '), E('code', {}, 'tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh'.format(domain))
+		]));
 
 		var doneBtn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _("I've deployed — Continue"));
 		doneBtn.addEventListener('click', function (ev) {
@@ -462,8 +466,9 @@ return view.extend({
 		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn]));
 		body.appendChild(out);
 
-		body.appendChild(E('p', { 'class': 'cbi-section-descr' },
-			_('Mode: <code>%s</code> — change it later in Settings.').format(mode)));
+		body.appendChild(E('p', { 'class': 'cbi-section-descr' }, [
+			_('Mode: '), E('code', {}, mode), _(' — change it later in Settings.')
+		]));
 	},
 
 	handleSave: null,

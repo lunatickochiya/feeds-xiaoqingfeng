@@ -50,8 +50,9 @@ genkey() {
 # mark <flag> — 向导断点标记（/var/run/hometunnel/<flag>，tmpfs 重启清零=重做向导尾部）
 cmd_mark() {
 	mkdir -p "$RUNDIR"
-	: > "$RUNDIR/$1"
-	msg "marked: $1"
+	# 写入标记时刻：向导 probeState 判 st.size>0，空文件导致步骤永不推进
+	date +%s > "$RUNDIR/$1"
+	msg "marked: $1 ($(cat "$RUNDIR/$1"))"
 }
 
 # set <key> <value> — 向导轻量写 UCI（仅限 global 段已知键）

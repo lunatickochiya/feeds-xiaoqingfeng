@@ -4,6 +4,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_Hans\n"
 
+msgid " (custom domain, free tier)."
+msgstr "（自定义域，免费额度）。"
+
+msgid " and shows an authorization URL. "
+msgstr " 并显示一个授权链接。"
+
+msgid " — change it later in Settings."
+msgstr " — 之后可在设置页修改。"
+
 msgid "%d domains"
 msgstr "%d 个域名"
 
@@ -16,17 +25,20 @@ msgstr "（日志不可用）"
 msgid "+%d more"
 msgstr "还有 %d 条"
 
+msgid ". "
+msgstr "。"
+
 msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
 msgstr "至少添加一个要开放到公网的服务。请在“接入规则”TAB页面中添加，然后回到这里。"
 
 msgid "All checks passed. Daemon enabled. Opening status page…"
 msgstr "全部通过。开关守护已启用。正在打开状态页…"
 
-msgid "always-on"
-msgstr "常开"
-
 msgid "Always-on mode · remote switch not used"
 msgstr "常开模式 · 未使用外网开关"
+
+msgid "always-on"
+msgstr "常开"
 
 msgid "Any device · no app needed"
 msgstr "任意设备 · 无需 App"
@@ -115,17 +127,17 @@ msgstr "已在 Cloudflare 删除"
 msgid "Domain"
 msgstr "域名"
 
-msgid "done"
-msgstr "完成"
-
 msgid "Done! Reloading…"
 msgstr "完成！正在刷新…"
 
+msgid "done"
+msgstr "完成"
+
+msgid "Download the deployment bundle, extract it on a computer with Node.js, and run "
+msgstr "下载部署包，在一台装有 Node.js 的电脑上解压并运行 "
+
 msgid "Download"
 msgstr "下载"
-
-msgid "Download the deployment bundle, extract it on a computer with Node.js, and run <code>./deploy.sh</code>. "
-msgstr "下载部署包，在有 Node.js 的电脑上解压并运行 <code>./deploy.sh</code>。"
 
 msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
 msgstr "每条规则通过隧道暴露一个内网服务，域名形如 <code>子域.域名</code>。"
@@ -169,9 +181,6 @@ msgstr "硬熔断（秒）"
 msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
 msgstr "HomeLede 基于 Cloudflare Tunnel 的全免费内网穿透。"
 
-msgid "HomeTunnel"
-msgstr "HomeTunnel"
-
 msgid "HomeTunnel Wizard"
 msgstr "HomeTunnel 设置向导"
 
@@ -180,6 +189,9 @@ msgstr "HomeTunnel — 接入规则"
 
 msgid "HomeTunnel — Settings"
 msgstr "HomeTunnel — 设置"
+
+msgid "HomeTunnel"
+msgstr "HomeTunnel"
 
 msgid "How long the tunnel stays open after \"on\". Append ?min=N to the \"on\" link to override, up to the max."
 msgstr "“开”后隧道保持打开的时长。在“开”链接后加 ?min=N 可临时指定，最大不超过上限。"
@@ -211,14 +223,14 @@ msgstr "绑定后锁定（路由器重装后 Cloudflare 授权丢失时，会退
 msgid "Max TTL (min)"
 msgstr "最大 TTL（分钟）"
 
-msgid "Mode"
-msgstr "模式"
-
 msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
 msgstr "模式与开关参数。TTL 族参数会固化进开关部署包——修改后需重新生成并重新部署。"
 
-msgid "Mode: <code>%s</code> — change it later in Settings."
-msgstr "模式：<code>%s</code>——之后可在设置中更改。"
+msgid "Mode"
+msgstr "模式"
+
+msgid "Mode: "
+msgstr "模式："
 
 msgid "Name"
 msgstr "名称"
@@ -235,14 +247,14 @@ msgstr "关闭"
 msgid "ok"
 msgstr "正常"
 
-msgid "on"
-msgstr "开启"
-
-msgid "On your computer: <code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
-msgstr "在你的电脑上：<code>tar xzf hometunnel-worker-%s.tar.gz && cd hometunnel-worker && ./deploy.sh</code>"
+msgid "On your computer: "
+msgstr "在你的电脑上："
 
 msgid "ON · %d min left"
 msgstr "ON · 剩余 %d 分钟"
+
+msgid "on"
+msgstr "开启"
 
 msgid "on-demand (remote switch)"
 msgstr "按需（外网开关控制）"
@@ -304,14 +316,14 @@ msgstr "推荐按需。按需：隧道默认关闭，通过外网开关从外部
 msgid "Refetch"
 msgstr "重新获取"
 
-msgid "Remote Switch"
-msgstr "外网开关"
-
 msgid "Remote switch service"
 msgstr "外网开关服务"
 
 msgid "Remote switch state"
 msgstr "外网开关状态"
+
+msgid "Remote Switch"
+msgstr "外网开关"
 
 msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
 msgstr "临近 TTL 到期且检测到真实流量时，每次续期的时长（使用中自动续期）。"
@@ -370,10 +382,10 @@ msgstr "子域名"
 msgid "Switch Bookmarks"
 msgstr "开关书签"
 
-msgid "Switch daemon"
+msgid "Switch daemon (router)"
 msgstr "开关守护进程"
 
-msgid "Switch daemon (router)"
+msgid "Switch daemon"
 msgstr "开关守护进程"
 
 msgid "Switch signaling"
@@ -382,8 +394,8 @@ msgstr "开关信令"
 msgid "Switch subdomain"
 msgstr "开关域名"
 
-msgid "The router runs <code>cloudflared tunnel login</code> and shows an authorization URL. "
-msgstr "路由器将运行 <code>cloudflared tunnel login</code> 并显示授权 URL。"
+msgid "The router runs "
+msgstr "路由器执行 "
 
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
 msgstr "隧道已在 Cloudflare 侧被删除。点击下方“创建”将自动重建（新隧道 ID，第 ⑤ 步会重新发布 DNS 路由）。"
@@ -391,8 +403,8 @@ msgstr "隧道已在 Cloudflare 侧被删除。点击下方“创建”将自动
 msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
 msgstr "隧道已在 Cloudflare 侧被删除。重新运行向导（将自动重建）。"
 
-msgid "This deploys the remote-switch service (a Cloudflare Worker) to <code>%s.%s</code> (custom domain, free tier)."
-msgstr "将外网开关服务（Cloudflare Worker）部署到 <code>%s.%s</code>（自定义域，免费额度）。"
+msgid "This deploys the remote-switch service (a Cloudflare Worker) to "
+msgstr "这会把外网开关服务（Cloudflare Worker）部署到 "
 
 msgid "Topology"
 msgstr "拓扑"
@@ -436,11 +448,11 @@ msgstr "未匹配的主机名/路径一律返回 404。"
 msgid "unreachable"
 msgstr "不可达"
 
-msgid "Verify"
-msgstr "验证"
-
 msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
 msgstr "从路由器验证外网开关，然后启用守护并进入状态页。"
+
+msgid "Verify"
+msgstr "验证"
 
 msgid "waiting for auth URL…"
 msgstr "等待授权 URL…"
@@ -448,11 +460,11 @@ msgstr "等待授权 URL…"
 msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
 msgstr "隧道有真实流量（新请求/活跃流）时持续续期 TTL；闲置则到期自动关闭。"
 
-msgid "Wizard"
-msgstr "向导"
-
 msgid "Wizard incomplete - topology pending"
 msgstr "向导未完成 · 拓扑待生成"
+
+msgid "Wizard"
+msgstr "向导"
 
 msgid "① Bookmark ON / OFF"
 msgstr "① 书签开 / 关"
