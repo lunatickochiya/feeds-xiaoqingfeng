@@ -65,10 +65,14 @@ return view.extend({
 		}).then(function (st) {
 			self.oauthOk = !!(st && st.size > 0);
 		}).catch(function () { self.oauthOk = false; }).then(function () {
-			return fs.stat(RUNDIR + '/worker-verified');
+			return fs.stat(RUNDIR + '/worker-deployed');
 		}).then(function (st) {
 			self.workerOk = !!(st && st.size > 0);
-		}).catch(function () { self.workerOk = false; });
+		}).catch(function () { self.workerOk = false; }).then(function () {
+			return fs.stat(RUNDIR + '/worker-verified');
+		}).then(function (st) {
+			self.verifiedOk = !!(st && st.size > 0);
+		}).catch(function () { self.verifiedOk = false; });
 	},
 
 	getStep: function () {
@@ -619,8 +623,18 @@ return view.extend({
 	/* ---- 步骤 8: verify + finish ---- */
 	step8: function (body) {
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
+		/* 已验证过（重访向导）: 显示完成态，不再重复 Verify */
+		if (this.verifiedOk) {
+			body.appendChild(E('p', {},
+				_('Setup is complete. The switch daemon is running in %s mode.').format(mode)));
+			body.appendChild(E('a', {
+				'class': 'btn cbi-button cbi-button-apply important', 'style': 'margin-top:6px',
+				'href': L.url('admin', 'services', 'hometunnel', 'status')
+			}, _('Open Status Page')));
+			return;
+		}
 		body.appendChild(E('p', {},
-			_('Verify the remote switch from the router, then enable the daemon and go to the status page.')));
+				_('Verify the remote switch from the router, then enable the daemon and go to the status page.')));
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Verify'));
 		var out = E('pre', { 'style': 'max-height:150px;overflow:auto;font-size:12px' }, '');

@@ -564,3 +564,9 @@ msgstr ""
 
 msgid "Pick a different subdomain above and retry, or delete that record in the Cloudflare dashboard (DNS app) first."
 msgstr ""
+
+msgid "Setup is complete. The switch daemon is running in %s mode."
+msgstr ""
+
+msgid "Open Status Page"
+msgstr ""

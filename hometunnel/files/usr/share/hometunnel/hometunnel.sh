@@ -869,7 +869,7 @@ upload_worker() {
 	else
 		mig=',"migrations":{"new_tag":"v1","new_sqlite_classes":["CtlState"]}'
 	fi
-	meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"$key"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}]'"$mig"'}'
+	meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"'"$key"'"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}]'"$mig"'}'
 	resp=$(curl -sS --max-time 60 -X PUT \
 		-H "Authorization: Bearer $tok" \
 		-F "metadata=$meta;type=application/json" \
