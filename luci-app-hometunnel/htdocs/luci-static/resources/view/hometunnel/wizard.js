@@ -194,16 +194,20 @@ return view.extend({
 		var tbl = E('table', { 'class': 'table' });
 		[
 			[_('Bound domain'), domain],
-			[_('Control-plane hostname'), ctlHost],
-			[_('Switch service'), 'https://' + ctlHost],
-			[_('Mode'), mode]
+			[_('Tunnel switch domain'), ctlHost],
+			[_('Switch page URL'), E('a', { 'href': 'https://' + ctlHost, 'target': '_blank' }, 'https://' + ctlHost)],
+			[_('Mode'), mode === 'ondemand' ? _('on-demand (remote switch)') : _('always-on')]
 		].forEach(function (row) {
 			tbl.appendChild(E('tr', { 'class': 'tr' }, [
 				E('td', { 'class': 'td', 'style': 'width:35%' }, row[0]),
-				E('td', { 'class': 'td' }, String(row[1]))
+				E('td', { 'class': 'td' }, row[1] instanceof Node ? row[1] : String(row[1]))
 			]));
 		});
 		body.appendChild(E('div', { 'class': 'cbi-section-node' }, [tbl]));
+		/* 按需模式: 告诉用户这个页面是干什么的 */
+		if (mode === 'ondemand')
+			body.appendChild(E('div', { 'class': 'cbi-section-descr' },
+				_('Open the switch page on any device to start or stop the tunnel from outside.')));
 
 		/* 在线健康（打开页面时查一次） */
 		var health = E('div', { 'style': 'margin:10px 0' }, _('Checking online status…'));
@@ -746,8 +750,9 @@ return view.extend({
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		/* 已验证过（重访向导）: 显示完成态，不再重复 Verify */
 		if (this.verifiedOk) {
+			var modeName = mode === 'ondemand' ? _('on-demand (remote switch)') : _('always-on');
 			body.appendChild(E('p', {},
-				_('Setup is complete. The switch daemon is running in %s mode.').format(mode)));
+				_('Setup is complete. The switch daemon is running in %s mode.').format(modeName)));
 			body.appendChild(E('a', {
 				'class': 'btn cbi-button cbi-button-apply important', 'style': 'margin-top:6px',
 				'href': L.url('admin', 'services', 'hometunnel', 'status')

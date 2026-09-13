@@ -36,9 +36,6 @@ msgstr "设置已锁定。只有解绑后才会变更。"
 msgid "Bound domain"
 msgstr "绑定域名"
 
-msgid "Control-plane hostname"
-msgstr "控制面子域名"
-
 msgid "Switch service"
 msgstr "开关服务"
 
@@ -289,10 +286,10 @@ msgid "unknown"
 msgstr "未知"
 
 msgid "on-demand (remote switch)"
-msgstr "按需（外网开关控制）"
+msgstr "按需启停"
 
 msgid "always-on"
-msgstr "常开"
+msgstr "始终开启"
 
 msgid "Switch daemon"
 msgstr "开关守护进程"
@@ -602,3 +599,14 @@ msgstr "确认页面显示的授权码与上方一致，然后点击「Authorize
 
 msgid "Come back to this page — it continues automatically."
 msgstr "完成后回到本页，页面会自动继续。"
+
+
+msgid "Tunnel switch domain"
+msgstr "隧道启停控制域名"
+
+msgid "Switch page URL"
+msgstr "开关页面地址"
+
+msgid "Open the switch page on any device to start or stop the tunnel from outside."
+msgstr "在任意设备打开开关页面，即可从外部启动或停止隧道。"
+
