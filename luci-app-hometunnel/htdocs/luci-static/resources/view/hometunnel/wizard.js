@@ -537,6 +537,20 @@ return view.extend({
 				right.appendChild(E('div', { 'style': 'word-break:break-all;margin-bottom:6px' }, [
 					E('a', { 'href': info.verification_url, 'target': '_blank' }, info.verification_url)
 				]));
+				/* 授权码醒目展示（设备流核对用） */
+				right.appendChild(E('div', { 'style': 'margin:2px 0 10px 0' }, [
+					_('Authorization code:'),
+					' ',
+					E('span', { 'style': 'font-family:monospace;font-size:16px;font-weight:bold;letter-spacing:1px' }, info.user_code || '')
+				]));
+				/* 操作指引: 告诉用户在 Cloudflare 页面上要做什么 */
+				right.appendChild(E('div', { 'class': 'cbi-section-descr', 'style': 'margin-bottom:4px' }, _('How to authorize:')));
+				right.appendChild(E('ol', { 'style': 'margin:0 0 10px 0;padding-left:18px' }, [
+					E('li', {}, _('Open the link above, or scan the QR code with a phone.')),
+					E('li', {}, _('Log in to your Cloudflare account on that page.')),
+					E('li', {}, _('Confirm the page shows the same code as above, then click "Authorize".')),
+					E('li', {}, _('Come back to this page — it continues automatically.'))
+				]));
 				right.appendChild(E('div', { 'class': 'cbi-section-descr' },
 					_('The page is served by Cloudflare and may show "Wrangler" — that is Cloudflare\'s official CLI identity and is expected.')));
 				var status = E('div', { 'style': 'margin-top:8px' }, _('Waiting for authorization…'));

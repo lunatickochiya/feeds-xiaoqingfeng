@@ -585,3 +585,20 @@ msgstr "接入规则"
 msgid "Settings"
 msgstr "设置"
 
+msgid "Authorization code:"
+msgstr "授权码："
+
+msgid "How to authorize:"
+msgstr "如何授权："
+
+msgid "Open the link above, or scan the QR code with a phone."
+msgstr "打开上面的链接，或用手机扫描二维码。"
+
+msgid "Log in to your Cloudflare account on that page."
+msgstr "在打开的页面中登录你的 Cloudflare 账号。"
+
+msgid "Confirm the page shows the same code as above, then click \"Authorize\"."
+msgstr "确认页面显示的授权码与上方一致，然后点击「Authorize」。"
+
+msgid "Come back to this page — it continues automatically."
+msgstr "完成后回到本页，页面会自动继续。"

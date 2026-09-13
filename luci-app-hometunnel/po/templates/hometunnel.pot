@@ -1,7 +1,5 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: \n"
-"Content-Type: text/plain; charset=UTF-8\n"
 
 msgid "HomeTunnel Access"
 msgstr ""
@@ -585,3 +583,20 @@ msgstr ""
 msgid "Settings"
 msgstr ""
 
+msgid "Authorization code:"
+msgstr ""
+
+msgid "How to authorize:"
+msgstr ""
+
+msgid "Open the link above, or scan the QR code with a phone."
+msgstr ""
+
+msgid "Log in to your Cloudflare account on that page."
+msgstr ""
+
+msgid "Confirm the page shows the same code as above, then click \"Authorize\"."
+msgstr ""
+
+msgid "Come back to this page — it continues automatically."
+msgstr ""
