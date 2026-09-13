@@ -18,7 +18,7 @@
 #   oauth-start             生成设备授权 URL（RFC 8628，扫码一次授权开关服务部署）
 #   oauth-status            查询授权轮询状态（向导轮询用）
 #   oauth-clear             清除本地保存的 OAuth 凭据（解绑/重授权用）
-#   deploy                  自动部署控制面 Worker（需先完成 oauth，全程路由器内 curl 完成）
+#   deploy [takeover]       自动部署控制面 Worker（takeover=用户确认接管冲突域名后传入）
 #   oauth-deploy            oauth-start + 轮询等授权 + deploy 一条龙（向导调用）
 #
 # 灵感与协议来源: AI-X-Space/llm-ondemand-tunnel (Apache-2.0)
@@ -648,12 +648,72 @@ cmd_oauth_status() {
 	esac
 }
 
-# 用 access token 查 memberships 拿 account_id（单账户场景）
+# 用 access token 查账户（wrangler 用 memberships，但 account:read scope 下
+# /memberships 403 —— /accounts 实测可用且返回同款 account id）
 oauth_query_account_id() {
 	local tok="$1" resp
 	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $tok" \
-		"https://api.cloudflare.com/client/v4/memberships?limit=5" 2>/dev/null) || return 1
-	jsonfilter -s "$resp" -e '@.result[0].account.id' 2>/dev/null
+		"https://api.cloudflare.com/client/v4/accounts" 2>/dev/null) || return 1
+	jsonfilter -s "$resp" -e '@.result[0].id' 2>/dev/null
+}
+
+# 开关域名占用检测（部署前预检）。
+# 返回 0 = 干净可绑; 1 = 被占。stdout 给出占用详情（向导/日志用）:
+#   clean                 无任何占用
+#   worker:<script>       已挂在本账号其他 Worker（100116 场景）
+#   dns:<type>            已有普通 DNS 记录（100117 场景）
+#   foreign               已挂在别的 Cloudflare 账号（PUT 会报不可覆盖）
+ctl_domain_check() {
+	local tok="$1" acct="$2" hostn="$3" zone_id="$4" resp i h s found rectype
+	# a) custom domain 绑定表（账号级，一次查全）
+	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/domains?per_page=100" 2>/dev/null) || return 0
+	# jsonfilter 逐行输出 hostname 与 service（同序）——配对找 hostn
+	i=0; found=''
+	while IFS= read -r h; do
+		i=$((i+1))
+		[ "$h" = "$hostn" ] || continue
+		s=$(jsonfilter -s "$resp" -e "@.result[$((i-1))].service" 2>/dev/null)
+		found="worker:${s:-unknown}"
+	done <<EOF
+$(jsonfilter -s "$resp" -e '@.result[*].hostname' 2>/dev/null)
+EOF
+	if [ -n "$found" ]; then echo "$found"; return 1; fi
+	# b) 普通 DNS 记录（cert.pem DNS token 可读）
+	local ztok
+	ztok=$(cert_api_token)
+	if [ -n "$ztok" ] && [ -n "$zone_id" ]; then
+		resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $ztok" \
+			"https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?name=$hostn&per_page=5" 2>/dev/null) || return 0
+		rectype=$(jsonfilter -s "$resp" -e '@.result[0].type' 2>/dev/null)
+		[ -n "$rectype" ] && { echo "dns:$rectype"; return 1; }
+	fi
+	echo "clean"
+	return 0
+}
+
+# 解绑其他 Worker 的 custom domain（接管语义: 从 domains 列表找 id 后 DELETE）
+detach_worker_domain() {
+	local tok="$1" acct="$2" hostn="$3" svc="$4" resp dom_id
+	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/domains?per_page=100" 2>/dev/null) || return 1
+	# 找 hostname 匹配且 service=$svc 的绑定 id
+	local i=0 h s dom_id=''
+	while IFS= read -r h; do
+		i=$((i+1))
+		[ "$h" = "$hostn" ] || continue
+		s=$(jsonfilter -s "$resp" -e "@.result[$((i-1))].service" 2>/dev/null)
+		[ "$s" = "$svc" ] || continue
+		dom_id=$(jsonfilter -s "$resp" -e "@.result[$((i-1))].id" 2>/dev/null)
+	done <<EOF
+$(jsonfilter -s "$resp" -e '@.result[*].hostname' 2>/dev/null)
+EOF
+	[ -n "$dom_id" ] || { echo "ERROR: no custom domain binding found for $hostn on $svc" >&2; return 1; }
+	curl -fsS --max-time 15 -X DELETE -H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/domains/$dom_id" >/dev/null 2>&1 \
+		|| { echo "ERROR: DELETE workers/domains/$dom_id failed" >&2; return 1; }
+	msg "OK: detached $hostn from '$svc'"
+	return 0
 }
 
 cmd_oauth_clear() {
@@ -666,7 +726,35 @@ cmd_oauth_clear() {
 # 全程路由器内 curl（Workers Script Upload API multipart + workers/domains PUT），
 # wrangler 完全不参与。幂等：重复执行 = 更新 Worker 版本。
 
+# deploy-check: 向导⑦预检。返回 JSON:
+#   {"state":"clean"}                              可直接部署
+#   {"state":"conflict","kind":"worker","by":"llm-tunnel-ctl"}   域名挂在其他 Worker（需用户确认接管）
+#   {"state":"conflict","kind":"dns","by":"CNAME"}               主机名已有普通 DNS 记录（需手工处理）
+#   {"state":"error","error":"..."}
+cmd_deploy_check() {
+	local tok acct domain ctl_host zone_id occ
+	domain=$(get_ domain '')
+	ctl_host=$(get_ ctl_hostname ctl)
+	[ -n "$domain" ] || { msg '{"state":"error","error":"domain empty (wizard step 3)"}'; return 0; }
+	tok=$(oauth_valid_token)
+	[ -n "$tok" ] || { msg '{"state":"error","error":"not authorized (wizard step 4)"}'; return 0; }
+	acct=$(grep -oE '"account_id":"[^"]+"' "$OAUTH_JSON" | cut -d'"' -f4)
+	[ -n "$acct" ] || { acct=$(oauth_query_account_id "$tok") || acct=''; }
+	[ -n "$acct" ] || { msg '{"state":"error","error":"cannot resolve account_id"}'; return 0; }
+	zone_id=$(cf_zone_id "$tok" "$domain") || zone_id=''
+	occ=$(ctl_domain_check "$tok" "$acct" "$ctl_host.$domain" "$zone_id")
+	case "$occ" in
+		clean) msg '{"state":"clean"}' ;;
+		worker:hometunnel-ctl) msg '{"state":"clean"}' ;;
+		worker:*) msg '{"state":"conflict","kind":"worker","by":"'${occ#worker:}'"}' ;;
+		dns:*) msg '{"state":"conflict","kind":"dns","by":"'${occ#dns:}'"}' ;;
+		*) msg '{"state":"clean"}' ;;
+	esac
+	return 0
+}
+
 cmd_deploy() {
+	local confirmed="${1:-}"
 	local tok acct domain ctl_host key zone_id resp
 	domain=$(get_ domain '')
 	ctl_host=$(get_ ctl_hostname ctl)
@@ -689,6 +777,34 @@ cmd_deploy() {
 	# 1) zone_id（cert.pem 里有 zoneID 但那是 login 时选的 zone；域名可能不同 → 用 API 查全称精确匹配）
 	zone_id=$(cf_zone_id "$tok" "$domain") || die "zone lookup failed for $domain"
 	msg "deploy: zone=$zone_id"
+
+	# 1.5) 开关域名占用预检（冲突时需用户确认，见 deploy-check）
+	occ=$(ctl_domain_check "$tok" "$acct" "$ctl_host.$domain" "$zone_id")
+	case "$occ" in
+		clean)
+			;;
+		worker:hometunnel-ctl)
+			msg "deploy: switch domain already bound to $WORKER_NAME (idempotent rebind)"
+			;;
+		worker:*)
+			# 100116 场景: 域名挂在其他 Worker 上（如旧原型）。
+			# 默认拒绝；仅当向导拿到用户确认（takeover 参数）才接管
+			old=${occ#worker:}
+			if [ "$confirmed" != "takeover" ]; then
+				die "SWITCH-DOMAIN-CONFLICT: '$ctl_host.$domain' is already bound to Worker '$old'. Run deploy-check in the wizard to confirm the takeover."
+			fi
+			msg "deploy: switch domain in use by '$old' — taking over (user confirmed)"
+			detach_worker_domain "$tok" "$acct" "$ctl_host.$domain" "$old" \
+				|| die "cannot take over switch domain from '$old' (detach failed — delete its custom domain in the Cloudflare dashboard, then retry)"
+			;;
+		dns:*)
+			# 100117 场景: 该主机名已有普通 DNS 记录（用户手工建过）
+			die "hostname '$ctl_host.$domain' has an existing ${occ#dns:} DNS record. Delete it first (DNS app in the Cloudflare dashboard), or change the switch hostname in Settings."
+			;;
+		*)
+			# 查询失败等 — PUT 会给出权威错误，继续
+			;;
+	esac
 
 	# 2) 上传 Worker（multipart: metadata + worker.js）
 	upload_worker "$tok" "$acct" || die "worker upload failed"
@@ -726,44 +842,33 @@ cf_zone_id() {
 
 # multipart 上传 Worker（curl -F 复刻 wrangler deploy 的 API 调用）
 upload_worker() {
-	local tok="$1" acct="$2" meta tmp resp rc
+	local tok="$1" acct="$2" meta tmp resp rc mig
 	# worker.js 模板先做 TTL 占位符替换（与 bundle 同款 sed），产物只存在 tmpfs
-	tmp=$(mktemp /tmp/ht-worker.XXXXXX.js) || die "mktemp failed"
+	tmp=$(mktemp /tmp/ht-worker.js.XXXXXX) || die "mktemp failed"
 	sed -e "s|@@DEFAULT_TTL@@|$(get_ default_ttl 45)|g" \
 	    -e "s|@@MAX_TTL@@|$(get_ max_ttl 240)|g" \
 	    -e "s|@@RENEW_TTL@@|$(get_ renew_ttl 45)|g" \
 	    "$SHARE/worker/worker.js.tpl" > "$tmp"
 	# metadata: main_module + bindings(secret_text CTL_KEY + durable_object_namespace CTL_STATE)
-	#   + compatibility_date + migrations(new_sqlite_classes)
-	# 与 wrangler.toml.tpl 等价（无需 routes——自定义域走 workers/domains 单独 PUT）
-	meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"'"$key"'"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}],"migrations":[{"new_tag":"v1","new_sqlite_classes":["CtlState"]}]}'
-	# curl -F 构建 multipart（curl 自动设 Content-Type: multipart/form-data）
-	resp=$(curl -fsS --max-time 60 -X PUT \
+	#   + compatibility_date + migrations —— 注意: multipart metadata 里 migrations 是
+	#   单个对象（非 wrangler.toml 的数组），数组会被 API 以 10021 拒绝（实测）。
+	# 同名 Worker 已存在 → DO 迁移 v1 已应用，重传不再发 migrations（幂等）
+	if curl -sS --max-time 15 -H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/scripts" 2>/dev/null \
+		| grep -q "\"$WORKER_NAME\""; then
+		mig=""
+		msg "deploy: worker exists — idempotent re-upload"
+	else
+		mig=',"migrations":{"new_tag":"v1","new_sqlite_classes":["CtlState"]}'
+	fi
+	meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"$key"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}]'"$mig"'}'
+	resp=$(curl -sS --max-time 60 -X PUT \
 		-H "Authorization: Bearer $tok" \
 		-F "metadata=$meta;type=application/json" \
-		-F "worker.js=@$tmp;type=application/javascript+module" \
+		-F "worker.js=@$tmp;filename=worker.js;type=application/javascript+module" \
 		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/scripts/$WORKER_NAME" 2>&1)
 	rc=$?
 	rm -f "$tmp"
-	# 10074 = Durable Object 类已存在（重复部署）→ 按 wrangler 语义改用增量迁移重试
-	if [ $rc -ne 0 ] || ! echo "$resp" | grep -q '"success": *true'; then
-		if echo "$resp" | grep -q '"code":10074'; then
-			msg "deploy: DO class exists — retrying with incremental migration"
-			meta='{"main_module":"worker.js","compatibility_date":"2026-08-01","bindings":[{"type":"secret_text","name":"CTL_KEY","text":"'"$key"'"},{"type":"durable_object_namespace","name":"CTL_STATE","class_name":"CtlState"}],"migrations":[{"new_tag":"v2","new_sqlite_classes":["CtlState"]}]}'
-			tmp=$(mktemp /tmp/ht-worker.XXXXXX.js) || die "mktemp failed"
-			sed -e "s|@@DEFAULT_TTL@@|$(get_ default_ttl 45)|g" \
-			    -e "s|@@MAX_TTL@@|$(get_ max_ttl 240)|g" \
-			    -e "s|@@RENEW_TTL@@|$(get_ renew_ttl 45)|g" \
-			    "$SHARE/worker/worker.js.tpl" > "$tmp"
-			resp=$(curl -fsS --max-time 60 -X PUT \
-				-H "Authorization: Bearer $tok" \
-				-F "metadata=$meta;type=application/json" \
-				-F "worker.js=@$tmp;type=application/javascript+module" \
-				"https://api.cloudflare.com/client/v4/accounts/$acct/workers/scripts/$WORKER_NAME" 2>&1)
-			rc=$?
-			rm -f "$tmp"
-		fi
-	fi
 	[ $rc -eq 0 ] || die "workers/scripts PUT failed: $resp"
 	echo "$resp" | grep -q '"success": *true' || die "worker upload unexpected: $resp"
 	msg "OK: worker uploaded (script=$WORKER_NAME)"
@@ -788,6 +893,7 @@ verify_worker_http() {
 
 # oauth-deploy: 向导一条龙 job（等待授权 + 部署）
 cmd_oauth_deploy() {
+	local arg="${1:-}"
 	local i=0 st first
 	msg "== waiting for authorization =="
 	# 先发起（若未在途）；oauth-start 的 JSON（user_code/verification_url）透传到 job 输出，
@@ -797,7 +903,7 @@ cmd_oauth_deploy() {
 	case "$first" in
 		*'already_authorized'*)
 			msg "== already authorized, deploying =="
-			cmd_deploy
+			cmd_deploy "$arg"
 			return $?
 			;;
 	esac
@@ -806,7 +912,7 @@ cmd_oauth_deploy() {
 		case "$st" in
 			*'"authorized"'*)
 				msg "== authorized, deploying =="
-				cmd_deploy
+				cmd_deploy "$arg"
 				return 0
 				;;
 			*'"expired"'*)
@@ -849,8 +955,9 @@ case "${1:-}" in
 	oauth-start)  cmd_oauth_start ;;
 	oauth-status) cmd_oauth_status ;;
 	oauth-clear)  cmd_oauth_clear ;;
-	deploy)       cmd_deploy ;;
-	oauth-deploy) cmd_oauth_deploy ;;
+	deploy)       shift; cmd_deploy "$@" ;;
+	deploy-check) cmd_deploy_check ;;
+	oauth-deploy) shift; cmd_oauth_deploy "$@" ;;
 	*)
 		cat <<'EOF'
 usage: hometunnel.sh <command>
@@ -873,7 +980,8 @@ usage: hometunnel.sh <command>
   oauth-start           start OAuth device flow (prints QR/verify URL)
   oauth-status          poll OAuth device flow state
   oauth-clear           clear saved OAuth credentials
-  deploy                deploy control-plane Worker via API (needs oauth)
+  deploy [takeover]     deploy control-plane Worker via API (needs oauth)
+  deploy-check          pre-check switch domain conflicts (wizard step 7)
   oauth-deploy          wait for oauth + deploy (wizard one-shot job)
 EOF
 		exit 1

@@ -3,21 +3,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-msgid " (custom domain, free tier)."
-msgstr ""
-
-msgid " and shows an authorization URL. "
-msgstr ""
-
-msgid " on the router and follow the README inside."
-msgstr ""
-
-msgid " — change it later in Settings."
-msgstr ""
-
-msgid " — fully automatic from the router, no computer or Node.js needed."
-msgstr ""
-
 msgid "%d domains"
 msgstr ""
 
@@ -30,9 +15,6 @@ msgstr ""
 msgid "+%d more"
 msgstr ""
 
-msgid ". "
-msgstr ""
-
 msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
 msgstr ""
 
@@ -40,6 +22,15 @@ msgid "All checks passed. Daemon enabled. Opening status page…"
 msgstr ""
 
 msgid "Already authorized! Loading next step…"
+msgstr ""
+
+msgid "Cancel"
+msgstr ""
+
+msgid "Take Over and Deploy"
+msgstr ""
+
+msgid "Taking it over will unbind it from that service. Continue?"
 msgstr ""
 
 msgid "always-on"
@@ -52,9 +43,6 @@ msgid "Any device · no app needed"
 msgstr ""
 
 msgid "Any external device"
-msgstr ""
-
-msgid "Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf. "
 msgstr ""
 
 msgid "Authorized! Loading next step…"
@@ -94,6 +82,9 @@ msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
 msgstr ""
 
 msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
+msgstr ""
+
+msgid "checking…"
 msgstr ""
 
 msgid "cloudflared exited before the certificate was fetched:"
@@ -142,9 +133,6 @@ msgstr ""
 msgid "Deploy Now"
 msgstr ""
 
-msgid "Deploy the switch service (a Cloudflare Worker) to "
-msgstr ""
-
 msgid "Deployed! Loading next step…"
 msgstr ""
 
@@ -158,12 +146,6 @@ msgid "Done! Reloading…"
 msgstr ""
 
 msgid "Download"
-msgstr ""
-
-msgid "Download the deployment bundle, extract it on a computer with Node.js, and run "
-msgstr ""
-
-msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
 msgstr ""
 
 msgid "Edge protocol"
@@ -253,9 +235,6 @@ msgstr ""
 msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
 msgstr ""
 
-msgid "Mode: "
-msgstr ""
-
 msgid "Name"
 msgstr ""
 
@@ -272,9 +251,6 @@ msgid "ok"
 msgstr ""
 
 msgid "on"
-msgstr ""
-
-msgid "On your computer: "
 msgstr ""
 
 msgid "ON · %d min left"
@@ -320,9 +296,6 @@ msgid "Poll interval (s)"
 msgstr ""
 
 msgid "Polls commands every %ds"
-msgstr ""
-
-msgid "Prefer a computer? The classic bundle is still available: run "
 msgstr ""
 
 msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
@@ -430,9 +403,6 @@ msgstr ""
 msgid "The page is served by Cloudflare and may show \"Wrangler\" — that is Cloudflare's official CLI identity and is expected."
 msgstr ""
 
-msgid "The router runs "
-msgstr ""
-
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
 msgstr ""
 
@@ -440,9 +410,6 @@ msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate
 msgstr ""
 
 msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
-msgstr ""
-
-msgid "This deploys the remote-switch service (a Cloudflare Worker) to "
 msgstr ""
 
 msgid "Topology"
@@ -482,9 +449,6 @@ msgid "Unexpected response: %s"
 msgstr ""
 
 msgid "unknown"
-msgstr ""
-
-msgid "Unmatched hostnames/paths always return 404."
 msgstr ""
 
 msgid "unreachable"
@@ -554,4 +518,34 @@ msgid "⑦ Verify & Finish"
 msgstr ""
 
 msgid "⑧ Verify & Finish"
+msgstr ""
+
+
+
+msgid "The router runs %s and shows an authorization URL."
+msgstr ""
+
+msgid "Deploy the switch service (a Cloudflare Worker) to %s"
+msgstr ""
+
+msgid "Fully automatic from the router, no computer or Node.js needed."
+msgstr ""
+
+msgid "The switch domain %s is already bound to another service (Worker “%s”)."
+msgstr ""
+
+msgid "The switch domain %s already has a %s DNS record. Delete it in the Cloudflare dashboard (DNS app), or change the switch hostname in Settings, then retry."
+msgstr ""
+
+msgid "Prefer a computer? The classic bundle is still available: run %s on the router and follow the README inside."
+msgstr ""
+
+msgid "Mode: %s — change it later in Settings."
+msgstr ""
+
+msgid "Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf."
+msgstr ""
+
+
+msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. Unmatched hostnames/paths always return 404."
 msgstr ""

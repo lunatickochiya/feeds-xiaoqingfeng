@@ -167,8 +167,7 @@ return view.extend({
 	/* ---- 步骤 1: cloudflared tunnel login ---- */
 	step1: function (body) {
 		body.appendChild(E('p', {}, [
-			_('The router runs '), E('code', {}, 'cloudflared tunnel login'),
-			_(' and shows an authorization URL. ') +
+			_('The router runs %s and shows an authorization URL.').format('cloudflared tunnel login'), ' ',
 			_('Open it on any device, log into Cloudflare, pick your domain and authorize.')
 		]));
 
@@ -336,7 +335,7 @@ return view.extend({
 	step4: function (body) {
 		var self = this;
 		body.appendChild(E('p', {}, [
-			_('Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf. ') +
+			_('Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf.'), ' ',
 			_('Scan the QR code with your phone, or open the link, then tap Allow — that is the only manual step.')
 		]));
 
@@ -475,28 +474,81 @@ return view.extend({
 	step7: function (body) {
 		var self = this;
 		var domain = uci.get('hometunnel', 'global', 'domain');
+		var ctlHost = (uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl') + '.' + domain;
 		body.appendChild(E('p', {}, [
-			_('Deploy the switch service (a Cloudflare Worker) to ') +
-			E('code', {}, (uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl') + '.' + domain) +
-			_(' — fully automatic from the router, no computer or Node.js needed.')
+			_('Deploy the switch service (a Cloudflare Worker) to %s').format(ctlHost), ' ',
+			_('Fully automatic from the router, no computer or Node.js needed.')
 		]));
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Deploy Now'));
 		var out = E('pre', { 'style': 'max-height:220px;overflow:auto;font-size:12px' }, '');
+		var warn = E('div', { 'class': 'alert-message warning', 'style': 'display:none' });
+
+		var startDeploy = function (args) {
+			btn.disabled = true;
+			warn.style.display = 'none';
+			out.textContent = 'deploying…';
+			fs.exec(HT, ['job', 'oauth-deploy', HT, 'oauth-deploy'].concat(args || [])).then(function () {
+				poll.add(L.bind(self.watchDeploy, self, out, btn), 2);
+			});
+		};
+
 		btn.addEventListener('click', function (ev) {
 			ev.preventDefault();
 			btn.disabled = true;
-			out.textContent = 'deploying…';
-			fs.exec(HT, ['job', 'oauth-deploy', HT, 'oauth-deploy']).then(function () {
-				poll.add(L.bind(self.watchDeploy, self, out, btn), 2);
+			out.textContent = 'checking…';
+			/* 预检: 域名冲突 → 弹确认框；干净 → 直接部署 */
+			fs.exec(HT, ['deploy-check']).then(function (res) {
+				var st = null;
+				try { st = JSON.parse((res.stdout || '').trim()); } catch (e) {}
+				if (st && st.state === 'conflict' && st.kind === 'worker') {
+					/* 域名挂在其他 Worker 上 —— 用户确认后才接管 */
+					out.textContent = '';
+					warn.innerHTML = '';
+					warn.style.display = '';
+					warn.appendChild(E('div', {}, [
+						_('The switch domain %s is already bound to another service (Worker “%s”).').format(ctlHost, st.by)
+					]));
+					warn.appendChild(E('div', { 'style': 'margin-top:6px' },
+						_('Taking it over will unbind it from that service. Continue?')));
+					var yes = E('button', { 'class': 'btn cbi-button cbi-button-apply important', 'style': 'margin-top:8px' },
+						_('Take Over and Deploy'));
+					var no = E('button', { 'class': 'btn cbi-button', 'style': 'margin-top:8px;margin-left:8px' },
+						_('Cancel'));
+					yes.addEventListener('click', function (ev2) {
+						ev2.preventDefault();
+						startDeploy(['takeover']);
+					});
+					no.addEventListener('click', function (ev2) {
+						ev2.preventDefault();
+						warn.style.display = 'none';
+						btn.disabled = false;
+					});
+					warn.appendChild(E('div', {}, [yes, no]));
+					return;
+				}
+				if (st && st.state === 'conflict' && st.kind === 'dns') {
+					out.textContent = '';
+					warn.innerHTML = '';
+					warn.style.display = '';
+					warn.appendChild(E('div', {}, [
+						_('The switch domain %s already has a %s DNS record. Delete it in the Cloudflare dashboard (DNS app), or change the switch hostname in Settings, then retry.').format(ctlHost, st.by)
+					]));
+					btn.disabled = false;
+					return;
+				}
+				/* clean / 预检失败（后端会给出权威错误）→ 直接部署 */
+				startDeploy([]);
+			}).catch(function () {
+				startDeploy([]);
 			});
 		});
 		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn]));
+		body.appendChild(warn);
 		body.appendChild(out);
 
 		body.appendChild(E('p', { 'class': 'cbi-section-descr' }, [
-			_('Prefer a computer? The classic bundle is still available: run '), E('code', {}, 'hometunnel.sh bundle'),
-			_(' on the router and follow the README inside.')
+			_('Prefer a computer? The classic bundle is still available: run %s on the router and follow the README inside.').format('hometunnel.sh bundle')
 		]));
 	},
 
@@ -552,7 +604,7 @@ return view.extend({
 		body.appendChild(out);
 
 		body.appendChild(E('p', { 'class': 'cbi-section-descr' }, [
-			_('Mode: '), E('code', {}, mode), _(' — change it later in Settings.')
+			_('Mode: %s — change it later in Settings.').format(mode)
 		]));
 	},
 

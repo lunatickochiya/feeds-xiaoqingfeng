@@ -14,8 +14,7 @@ return view.extend({
 		var m, s, o;
 
 		m = new form.Map('hometunnel', _('HomeTunnel — Ingress Rules'),
-			_('Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. ') +
-			_('Unmatched hostnames/paths always return 404.'));
+			_('Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. Unmatched hostnames/paths always return 404.'));
 
 		s = m.section(form.GridSection, 'ingress', _('Rules'));
 		s.addremove = true;

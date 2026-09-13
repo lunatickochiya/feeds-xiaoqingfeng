@@ -4,21 +4,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Language: zh_Hans\n"
 
-msgid " (custom domain, free tier)."
-msgstr "（自定义域，免费额度）。"
-
-msgid " and shows an authorization URL. "
-msgstr " 并显示一个授权链接。"
-
-msgid " on the router and follow the README inside."
-msgstr " 并按包内 README 操作。"
-
-msgid " — change it later in Settings."
-msgstr " — 之后可在设置页修改。"
-
-msgid " — fully automatic from the router, no computer or Node.js needed."
-msgstr "——全程由路由器自动完成，无需电脑和 Node.js。"
-
 msgid "%d domains"
 msgstr "%d 个域名"
 
@@ -31,9 +16,6 @@ msgstr "（日志不可用）"
 msgid "+%d more"
 msgstr "还有 %d 条"
 
-msgid ". "
-msgstr "。"
-
 msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
 msgstr "至少添加一个要开放到公网的服务。请在“接入规则”TAB页面中添加，然后回到这里。"
 
@@ -42,6 +24,15 @@ msgstr "全部通过。开关守护已启用。正在打开状态页…"
 
 msgid "Already authorized! Loading next step…"
 msgstr "已授权！正在进入下一步…"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Take Over and Deploy"
+msgstr "接管并部署"
+
+msgid "Taking it over will unbind it from that service. Continue?"
+msgstr "接管后它将不再属于原服务。是否继续？"
 
 msgid "always-on"
 msgstr "常开"
@@ -54,9 +45,6 @@ msgstr "任意设备 · 无需 App"
 
 msgid "Any external device"
 msgstr "外网任意设备"
-
-msgid "Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf. "
-msgstr "授权路由器代你部署开关服务（一个 Cloudflare Worker）。"
 
 msgid "Authorized! Loading next step…"
 msgstr "授权成功！正在进入下一步…"
@@ -96,6 +84,9 @@ msgstr "Cloudflare 拒绝了已保存的证书。请先重新执行第 ① 步�
 
 msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
 msgstr "Cloudflare 拒绝了已保存的证书。请重新执行向导第 ① 步重新授权。"
+
+msgid "checking…"
+msgstr "正在检查…"
 
 msgid "cloudflared exited before the certificate was fetched:"
 msgstr "证书尚未拉取，cloudflared 已退出："
@@ -142,9 +133,6 @@ msgstr "部署失败——请检查上方输出"
 msgid "Deploy Now"
 msgstr "立即部署"
 
-msgid "Deploy the switch service (a Cloudflare Worker) to "
-msgstr "部署开关服务（一个 Cloudflare Worker）到"
-
 msgid "Deployed! Loading next step…"
 msgstr "部署完成！正在进入下一步…"
 
@@ -159,12 +147,6 @@ msgstr "完成！正在刷新…"
 
 msgid "Download"
 msgstr "下载"
-
-msgid "Download the deployment bundle, extract it on a computer with Node.js, and run "
-msgstr "下载部署包，在一台装有 Node.js 的电脑上解压并运行 "
-
-msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. "
-msgstr "每条规则通过隧道暴露一个内网服务，域名形如 <code>子域.域名</code>。"
 
 msgid "Edge protocol"
 msgstr "边缘协议"
@@ -253,9 +235,6 @@ msgstr "模式"
 msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
 msgstr "模式与开关参数。TTL 族参数会固化进开关部署包——修改后需重新生成并重新部署。"
 
-msgid "Mode: "
-msgstr "模式："
-
 msgid "Name"
 msgstr "名称"
 
@@ -273,9 +252,6 @@ msgstr "正常"
 
 msgid "on"
 msgstr "开启"
-
-msgid "On your computer: "
-msgstr "在你的电脑上："
 
 msgid "ON · %d min left"
 msgstr "ON · 剩余 %d 分钟"
@@ -321,9 +297,6 @@ msgstr "轮询间隔（秒）"
 
 msgid "Polls commands every %ds"
 msgstr "每 %d 秒拉取开关指令"
-
-msgid "Prefer a computer? The classic bundle is still available: run "
-msgstr "想用电脑？经典部署包依然可用：在路由器上运行 "
 
 msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
 msgstr "为每条启用的规则发布 CNAME <子域.域名> → 隧道（使用 cert.pem，无需 API Token）。"
@@ -430,9 +403,6 @@ msgstr "授权码已过期（5 分钟）。请重新点击“开始授权”。"
 msgid "The page is served by Cloudflare and may show \"Wrangler\" — that is Cloudflare's official CLI identity and is expected."
 msgstr "该页面由 Cloudflare 提供，可能显示“Wrangler”字样——这是 Cloudflare 官方命令行工具的标识，属正常现象。"
 
-msgid "The router runs "
-msgstr "路由器执行 "
-
 msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
 msgstr "隧道已在 Cloudflare 侧被删除。点击下方“创建”将自动重建（新隧道 ID，第 ⑤ 步会重新发布 DNS 路由）。"
 
@@ -441,9 +411,6 @@ msgstr "隧道在 Cloudflare 侧被删除了。点击下方“创建”会自动
 
 msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
 msgstr "隧道已在 Cloudflare 侧被删除。重新运行向导（将自动重建）。"
-
-msgid "This deploys the remote-switch service (a Cloudflare Worker) to "
-msgstr "这会把外网开关服务（Cloudflare Worker）部署到 "
 
 msgid "Topology"
 msgstr "拓扑"
@@ -483,9 +450,6 @@ msgstr "意外响应：%s"
 
 msgid "unknown"
 msgstr "未知"
-
-msgid "Unmatched hostnames/paths always return 404."
-msgstr "未匹配的主机名/路径一律返回 404。"
 
 msgid "unreachable"
 msgstr "不可达"
@@ -556,3 +520,34 @@ msgstr "⑦ 验证并完成"
 
 msgid "⑧ Verify & Finish"
 msgstr "⑧ 验证完成"
+
+
+
+msgid "The router runs %s and shows an authorization URL."
+msgstr "路由器将运行 %s 并显示一个授权链接。"
+
+msgid "Deploy the switch service (a Cloudflare Worker) to %s"
+msgstr "把开关服务（Cloudflare Worker）部署到 %s"
+
+msgid "Fully automatic from the router, no computer or Node.js needed."
+msgstr "全程由路由器自动完成，无需电脑、无需 Node.js。"
+
+msgid "The switch domain %s is already bound to another service (Worker “%s”)."
+msgstr "开关域名 %s 已绑定在其他服务（Worker “%s”）上。"
+
+msgid "The switch domain %s already has a %s DNS record. Delete it in the Cloudflare dashboard (DNS app), or change the switch hostname in Settings, then retry."
+msgstr "开关域名 %s 已有 %s 类型的 DNS 记录。请在 Cloudflare 面板（DNS 应用）删除该记录，或在「设置」中更换开关主机名后重试。"
+
+msgid "Prefer a computer? The classic bundle is still available: run %s on the router and follow the README inside."
+msgstr "想用电脑？经典 bundle 方式仍可用：在路由器上运行 %s 并按其中 README 操作。"
+
+msgid "Mode: %s — change it later in Settings."
+msgstr "模式：%s——之后可在「设置」中更改。"
+
+
+msgid "Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf."
+msgstr "授权路由器代表你部署开关服务（Cloudflare Worker）。"
+
+
+msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. Unmatched hostnames/paths always return 404."
+msgstr "每条规则把一个内网服务以 <code>子域名.域名</code> 形式经隧道开放到公网。未匹配的主机名/路径一律返回 404。"
