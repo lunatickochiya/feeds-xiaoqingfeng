@@ -195,19 +195,18 @@ return view.extend({
 		[
 			[_('Bound domain'), domain],
 			[_('Tunnel switch domain'), ctlHost],
-			[_('Switch page URL'), E('a', { 'href': 'https://' + ctlHost, 'target': '_blank' }, 'https://' + ctlHost)],
 			[_('Mode'), mode === 'ondemand' ? _('on-demand (remote switch)') : _('always-on')]
 		].forEach(function (row) {
 			tbl.appendChild(E('tr', { 'class': 'tr' }, [
 				E('td', { 'class': 'td', 'style': 'width:35%' }, row[0]),
-				E('td', { 'class': 'td' }, row[1] instanceof Node ? row[1] : String(row[1]))
+				E('td', { 'class': 'td' }, String(row[1]))
 			]));
 		});
 		body.appendChild(E('div', { 'class': 'cbi-section-node' }, [tbl]));
-		/* 按需模式: 告诉用户这个页面是干什么的 */
+		/* 按需模式: 开关走 URL（无页面），书签在状态页 */
 		if (mode === 'ondemand')
 			body.appendChild(E('div', { 'class': 'cbi-section-descr' },
-				_('Open the switch page on any device to start or stop the tunnel from outside.')));
+				_('Tunnel switching is done via URL, no page involved. Save the switch bookmarks from the Status page to start or stop the tunnel from any device.')));
 
 		/* 在线健康（打开页面时查一次） */
 		var health = E('div', { 'style': 'margin:10px 0' }, _('Checking online status…'));

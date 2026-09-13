@@ -598,8 +598,5 @@ msgstr ""
 msgid "Come back to this page — it continues automatically."
 msgstr ""
 
-msgid "Switch page URL"
-msgstr ""
-
-msgid "Open the switch page on any device to start or stop the tunnel from outside."
+msgid "Tunnel switching is done via URL, no page involved. Save the switch bookmarks from the Status page to start or stop the tunnel from any device."
 msgstr ""
