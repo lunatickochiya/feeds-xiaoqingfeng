@@ -27,7 +27,7 @@
 		}
 	},
 	"admin/services/hometunnel/wizard": {
-		"title": "Wizard",
+		"title": "Access",
 		"order": 20,
 		"action": {
 			"type": "view",

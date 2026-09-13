@@ -1,482 +1,16 @@
 msgid ""
 msgstr ""
+"Project-Id-Version: \n"
 "Content-Type: text/plain; charset=UTF-8\n"
-"Content-Transfer-Encoding: 8bit\n"
-"Language: zh_Hans\n"
 
-msgid "%d domains"
-msgstr "%d 个域名"
+msgid "HomeTunnel Access"
+msgstr "HomeTunnel 接入"
 
-msgid "(empty)"
-msgstr "（空）"
-
-msgid "(log unavailable)"
-msgstr "（日志不可用）"
-
-msgid "+%d more"
-msgstr "还有 %d 条"
-
-msgid "Add at least one service to open to the public internet. Add it in the \"Ingress Rules\" tab, then come back here."
-msgstr "至少添加一个要开放到公网的服务。请在“接入规则”TAB页面中添加，然后回到这里。"
-
-msgid "All checks passed. Daemon enabled. Opening status page…"
-msgstr "全部通过。开关守护已启用。正在打开状态页…"
-
-msgid "Already authorized! Loading next step…"
-msgstr "已授权！正在进入下一步…"
-
-msgid "Cancel"
-msgstr "取消"
-
-msgid "Take Over and Deploy"
-msgstr "接管并部署"
-
-msgid "Taking it over will unbind it from that service. Continue?"
-msgstr "接管后它将不再属于原服务。是否继续？"
-
-msgid "always-on"
-msgstr "常开"
-
-msgid "Always-on mode · remote switch not used"
-msgstr "常开模式 · 未使用外网开关"
-
-msgid "Any device · no app needed"
-msgstr "任意设备 · 无需 App"
-
-msgid "Any external device"
-msgstr "外网任意设备"
-
-msgid "Authorized! Loading next step…"
-msgstr "授权成功！正在进入下一步…"
-
-msgid "auto-off after %dh hard cap"
-msgstr "%d 小时硬上限自动熄灭"
-
-msgid "Auto-renew +%d min on traffic"
-msgstr "有流量自动续期 +%d 分钟"
-
-msgid "Auto-renew amount (min)"
-msgstr "自动续期幅度（分钟）"
-
-msgid "Auto-renew while in use"
-msgstr "使用中自动续期"
-
-msgid "auto-renewed"
-msgstr "已自动续期"
-
-msgid "Bookmark"
-msgstr "书签"
-
-msgid "Browser"
-msgstr "浏览器"
-
-msgid "Bundle ready — download below"
-msgstr "部署包已生成——点击下方下载"
-
-msgid "certificate rejected"
-msgstr "证书被拒"
-
-msgid "Cloudflare edge network"
-msgstr "Cloudflare 边缘网络"
-
-msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
-msgstr "Cloudflare 拒绝了已保存的证书。请先重新执行第 ① 步。"
-
-msgid "Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize."
-msgstr "Cloudflare 拒绝了已保存的证书。请重新执行向导第 ① 步重新授权。"
-
-msgid "checking…"
-msgstr "正在检查…"
-
-msgid "cloudflared exited before the certificate was fetched:"
-msgstr "证书尚未拉取，cloudflared 已退出："
-
-msgid "cloudflared metrics port"
-msgstr "cloudflared metrics 端口"
-
-msgid "cloudflared service syntax, e.g. <code>http://192.168.1.10:5000</code>, <code>ssh://192.168.1.10:22</code>, <code>tcp://…</code>"
-msgstr "cloudflared 服务语法，如 <code>http://192.168.1.10:5000</code>、<code>ssh://192.168.1.10:22</code>、<code>tcp://…</code>"
-
-msgid "Connect timeout (s)"
-msgstr "连接超时（秒）"
-
-msgid "Copied ✓"
-msgstr "已复制 ✓"
-
-msgid "Copy \"OFF\" link"
-msgstr "复制“关”链接"
-
-msgid "Copy \"ON\" link"
-msgstr "复制“开”链接"
-
-msgid "Create the tunnel on your Cloudflare account (uses the authorization from step ①)."
-msgstr "在你的 Cloudflare 账号上创建隧道（使用步骤 ① 的授权）。"
-
-msgid "Create Tunnel"
-msgstr "创建隧道"
-
-msgid "Created! Loading next step…"
-msgstr "创建成功！正在进入下一步…"
-
-msgid "Data traffic"
-msgstr "访问流量"
-
-msgid "Default TTL (min)"
-msgstr "默认 TTL（分钟）"
-
-msgid "deleted on Cloudflare"
-msgstr "已在 Cloudflare 删除"
-
-msgid "Deploy failed — check output above"
-msgstr "部署失败——请检查上方输出"
-
-msgid "Deploy Now"
-msgstr "立即部署"
-
-msgid "Deployed! Loading next step…"
-msgstr "部署完成！正在进入下一步…"
-
-msgid "Domain"
-msgstr "域名"
-
-msgid "done"
-msgstr "完成"
-
-msgid "Done! Reloading…"
-msgstr "完成！正在刷新…"
-
-msgid "Download"
-msgstr "下载"
-
-msgid "Edge protocol"
-msgstr "边缘协议"
-
-msgid "Enabled"
-msgstr "启用"
-
-msgid "Fail-closed threshold"
-msgstr "失败熔断阈值"
-
-msgid "failed"
-msgstr "失败"
-
-msgid "Failed: %s"
-msgstr "失败：%s"
-
-msgid "Fetch Domains"
-msgstr "获取域名列表"
-
-msgid "Finish the 7-step wizard to see your live topology here."
-msgstr "完成 7 步向导后，这里将展示你的实时隧道拓扑。"
-
-msgid "Fix the issue (e.g. router DNS), reload this page and try again."
-msgstr "修复问题（如路由器 DNS）后刷新本页重试。"
+msgid "Bound to your Cloudflare account. Daily changes live in \"Ingress Rules\". Unbind only to start over."
+msgstr "已绑定 Cloudflare 账号。日常改动请到「接入规则」页。需要重新设置时才解绑。"
 
 msgid "Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare)."
 msgstr "全免费 Cloudflare Tunnel 配置。你需要：一个 Cloudflare 账号和一个 NS 托管在 Cloudflare 的域名。"
-
-msgid "General"
-msgstr "基本设置"
-
-msgid "Generate Bundle"
-msgstr "生成部署包"
-
-msgid "Hard cap (seconds)"
-msgstr "硬熔断（秒）"
-
-msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
-msgstr "HomeLede 基于 Cloudflare Tunnel 的全免费内网穿透。"
-
-msgid "HomeTunnel"
-msgstr "HomeTunnel"
-
-msgid "HomeTunnel Wizard"
-msgstr "HomeTunnel 设置向导"
-
-msgid "HomeTunnel — Ingress Rules"
-msgstr "HomeTunnel — 接入规则"
-
-msgid "HomeTunnel — Settings"
-msgstr "HomeTunnel — 设置"
-
-msgid "How long the tunnel stays open after \"on\". Append ?min=N to the \"on\" link to override, up to the max."
-msgstr "“开”后隧道保持打开的时长。在“开”链接后加 ?min=N 可临时指定，最大不超过上限。"
-
-msgid "I've deployed — Continue"
-msgstr "我已部署——继续"
-
-msgid "Ingress Rules"
-msgstr "接入规则"
-
-msgid "LAN"
-msgstr "内网 LAN"
-
-msgid "Live topology generated from your configuration."
-msgstr "由你的配置实时生成的拓扑图。"
-
-msgid "loading…"
-msgstr "加载中…"
-
-msgid "Local fuse: force-stop after this many seconds of continuous run; renewals do NOT extend it. 0 = unlimited (not recommended with auto-renew)."
-msgstr "本地熔断：连续运行超过该秒数强制停止，续期不会延长它。0 = 不限（开启自动续期时不建议）。"
-
-msgid "Local Prometheus metrics port of cloudflared (traffic signal for auto-renew)."
-msgstr "cloudflared 本地指标端口（自动续期的流量信号源）。"
-
-msgid "Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). To re-choose, unbind it first."
-msgstr "绑定后锁定（路由器重装后 Cloudflare 授权丢失时，会退回可编辑状态）。如需更换，请先解除绑定。"
-
-msgid "Max TTL (min)"
-msgstr "最大 TTL（分钟）"
-
-msgid "Mode"
-msgstr "模式"
-
-msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
-msgstr "模式与开关参数。TTL 族参数会固化进开关部署包——修改后需重新生成并重新部署。"
-
-msgid "Name"
-msgstr "名称"
-
-msgid "no hard cap"
-msgstr "无硬上限"
-
-msgid "No ingress rules yet"
-msgstr "还没有接入规则"
-
-msgid "off"
-msgstr "关闭"
-
-msgid "ok"
-msgstr "正常"
-
-msgid "on"
-msgstr "开启"
-
-msgid "ON · %d min left"
-msgstr "ON · 剩余 %d 分钟"
-
-msgid "on-demand (remote switch)"
-msgstr "按需（外网开关控制）"
-
-msgid "On-demand parameters"
-msgstr "按需模式参数"
-
-msgid "Open Ingress Rules"
-msgstr "打开接入规则"
-
-msgid "Open it on any device, log into Cloudflare, pick your domain and authorize."
-msgstr "在任意设备打开它，登录 Cloudflare，选择你的域名并授权。"
-
-msgid "Open Wizard"
-msgstr "打开向导"
-
-msgid "OpenWrt router"
-msgstr "OpenWrt 路由器"
-
-msgid "Optional. Only forward matching paths, e.g. <code>^/api(/.*)?$</code>"
-msgstr "可选。仅转发匹配的路径，如 <code>^/api(/.*)?$</code>"
-
-msgid "Optional. Rewrite the Host header sent to the origin (needed behind a name-based reverse proxy)."
-msgstr "可选。改写发往源站的 Host 头（源站在基于域名的反代后面时需要）。"
-
-msgid "Origin Host header"
-msgstr "回源 Host 头"
-
-msgid "Path regex"
-msgstr "路径正则"
-
-msgid "Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account)."
-msgstr "选择隧道主机名所用的域名（自动从你的 Cloudflare 账户获取）。"
-
-msgid "Please wait…"
-msgstr "请稍候…"
-
-msgid "Poll interval (s)"
-msgstr "轮询间隔（秒）"
-
-msgid "Polls commands every %ds"
-msgstr "每 %d 秒拉取开关指令"
-
-msgid "Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token)."
-msgstr "为每条启用的规则发布 CNAME <子域.域名> → 隧道（使用 cert.pem，无需 API Token）。"
-
-msgid "Publish DNS"
-msgstr "发布 DNS"
-
-msgid "QUIC is default; switch to http2 if UDP 7844 is degraded/blocked on your line."
-msgstr "默认 QUIC；线路 UDP 7844 劣化/受阻时切 http2。"
-
-msgid "Recent switch daemon log"
-msgstr "开关守护日志"
-
-msgid "Recommended. on-demand: tunnel closed by default, opened from outside via the remote switch. always-on: tunnel connected at boot."
-msgstr "推荐按需。按需：隧道默认关闭，通过外网开关从外部打开。常开：开机即连接。"
-
-msgid "Refetch"
-msgstr "重新获取"
-
-msgid "Remote Switch"
-msgstr "外网开关"
-
-msgid "Remote switch service"
-msgstr "外网开关服务"
-
-msgid "Remote switch state"
-msgstr "外网开关状态"
-
-msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
-msgstr "临近 TTL 到期且检测到真实流量时，每次续期的时长（使用中自动续期）。"
-
-msgid "Rules"
-msgstr "接入规则"
-
-msgid "running"
-msgstr "运行中"
-
-msgid "Save Domain"
-msgstr "保存域名"
-
-msgid "Save these as bookmarks on any device to open/close the tunnel from anywhere:"
-msgstr "保存为任意设备的浏览器书签，即可随时随地打开/关闭隧道："
-
-msgid "Saved! Loading next step…"
-msgstr "已保存！正在进入下一步…"
-
-msgid "Scan the QR code with your phone, or open the link, then tap Allow — that is the only manual step."
-msgstr "用手机扫描二维码或打开链接，点一下“允许”即可——这是唯一需要动手的一步。"
-
-msgid "Service URL"
-msgstr "服务地址"
-
-msgid "Settings"
-msgstr "设置"
-
-msgid "Setup is not complete. Run the wizard first."
-msgstr "配置尚未完成，请先运行向导。"
-
-msgid "Skip certificate verification for https origins (self-signed certs)."
-msgstr "对 https 源站跳过证书校验（自签名证书）。"
-
-msgid "Skip TLS verify"
-msgstr "跳过 TLS 校验"
-
-msgid "Some rules failed — check output above"
-msgstr "部分规则失败——请检查上方输出"
-
-msgid "start / stop"
-msgstr "拉起 / 熄灭"
-
-msgid "Start Authorization"
-msgstr "开始授权"
-
-msgid "Start Login"
-msgstr "开始授权"
-
-msgid "Status"
-msgstr "状态"
-
-msgid "Stop the tunnel after this many consecutive switch-service fetch failures."
-msgstr "开关服务连续拉取失败达到该次数后停止隧道。"
-
-msgid "stopped"
-msgstr "已停止"
-
-msgid "Subdomain"
-msgstr "子域名"
-
-msgid "Switch Bookmarks"
-msgstr "开关书签"
-
-msgid "Switch daemon"
-msgstr "开关守护进程"
-
-msgid "Switch signaling"
-msgstr "开关信令"
-
-msgid "Switch subdomain"
-msgstr "开关域名"
-
-msgid "The code expired (5 minutes). Click Start Authorization again."
-msgstr "授权码已过期（5 分钟）。请重新点击“开始授权”。"
-
-msgid "The page is served by Cloudflare and may show \"Wrangler\" — that is Cloudflare's official CLI identity and is expected."
-msgstr "该页面由 Cloudflare 提供，可能显示“Wrangler”字样——这是 Cloudflare 官方命令行工具的标识，属正常现象。"
-
-msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑤)."
-msgstr "隧道已在 Cloudflare 侧被删除。点击下方“创建”将自动重建（新隧道 ID，第 ⑤ 步会重新发布 DNS 路由）。"
-
-msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑥)."
-msgstr "隧道在 Cloudflare 侧被删除了。点击下方“创建”会自动重建（新隧道 ID，DNS 路由会在步骤⑥重新发布）。"
-
-msgid "The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically)."
-msgstr "隧道已在 Cloudflare 侧被删除。重新运行向导（将自动重建）。"
-
-msgid "Topology"
-msgstr "拓扑"
-
-msgid "Traffic (HTTPS)"
-msgstr "访问流量（HTTPS）"
-
-msgid "TTL remaining: %d min"
-msgstr "剩余可用：%d 分钟"
-
-msgid "Tunnel name"
-msgstr "隧道名称"
-
-msgid "Tunnel off · unreachable"
-msgstr "隧道未开启 · 不可达"
-
-msgid "Tunnel on Cloudflare"
-msgstr "Cloudflare 侧隧道"
-
-msgid "Tunnel process"
-msgstr "隧道进程"
-
-msgid "Tunnel service"
-msgstr "隧道服务"
-
-msgid "Tunnel Topology"
-msgstr "隧道拓扑"
-
-msgid "Turn Off"
-msgstr "关闭隧道"
-
-msgid "Turn On (%d min)"
-msgstr "开启隧道（%d 分钟）"
-
-msgid "Unexpected response: %s"
-msgstr "意外响应：%s"
-
-msgid "unknown"
-msgstr "未知"
-
-msgid "unreachable"
-msgstr "不可达"
-
-msgid "Verify"
-msgstr "验证"
-
-msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
-msgstr "从路由器验证外网开关，然后启用守护并进入状态页。"
-
-msgid "waiting for auth URL…"
-msgstr "等待授权 URL…"
-
-msgid "Waiting for authorization…"
-msgstr "等待授权…"
-
-msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
-msgstr "隧道有真实流量（新请求/活跃流）时持续续期 TTL；闲置则到期自动关闭。"
-
-msgid "Wizard"
-msgstr "向导"
-
-msgid "Wizard incomplete - topology pending"
-msgstr "向导未完成 · 拓扑待生成"
-
-msgid "① Bookmark ON / OFF"
-msgstr "① 书签开 / 关"
 
 msgid "① Cloudflare Authorization"
 msgstr "① Cloudflare 授权"
@@ -484,82 +18,200 @@ msgstr "① Cloudflare 授权"
 msgid "② Create Tunnel"
 msgstr "② 创建隧道"
 
-msgid "② Poll commands"
-msgstr "② 轮询指令"
-
 msgid "③ Choose Domain"
 msgstr "③ 选择域名"
-
-msgid "③ HTTPS"
-msgstr "③ HTTPS"
 
 msgid "④ Authorize Switch Service"
 msgstr "④ 授权开关服务"
 
-msgid "④ Ingress Rules"
-msgstr "④ 接入规则"
+msgid "⑤ Deploy Switch Service"
+msgstr "⑤ 部署开关服务"
 
-msgid "⑤ Ingress Rules"
-msgstr "⑤ 接入规则"
+msgid "⑥ Verify & Finish"
+msgstr "⑥ 验证完成"
 
-msgid "⑤ Publish DNS"
-msgstr "⑤ 发布 DNS"
+msgid "Setup is locked. These settings only change if you unbind."
+msgstr "设置已锁定。只有解绑后才会变更。"
 
-msgid "⑥ Deploy Remote Switch"
-msgstr "⑥ 部署外网开关"
+msgid "Bound domain"
+msgstr "绑定域名"
 
-msgid "⑥ Publish DNS"
-msgstr "⑥ 发布DNS"
+msgid "Control-plane hostname"
+msgstr "控制面子域名"
 
-msgid "⑦ Deploy Switch Service"
-msgstr "⑦ 部署开关服务"
+msgid "Switch service"
+msgstr "开关服务"
 
-msgid "⑦ Verify & Finish"
-msgstr "⑦ 验证并完成"
+msgid "Mode"
+msgstr "模式"
 
+msgid "Checking online status…"
+msgstr "正在检查在线状态…"
 
-msgid "⑧ Verify & Finish"
-msgstr "⑧ 验证完成"
+msgid "Online status unavailable. Check the router log."
+msgstr "在线状态暂不可用，请查看路由器日志。"
 
+msgid "Cloudflare authorization"
+msgstr "Cloudflare 授权"
 
+msgid "authorization lost — click Repair and re-authorize"
+msgstr "授权丢失——点击修复并重新授权"
+
+msgid "Tunnel"
+msgstr "隧道"
+
+msgid "deleted on Cloudflare — unbind to re-set up"
+msgstr "已在 Cloudflare 上被删除——解绑后重新设置"
+
+msgid "Cloudflare rejected the saved certificate — unbind to re-set up"
+msgstr "Cloudflare 拒绝了保存的证书——解绑后重新设置"
+
+msgid "domain taken over by another service"
+msgstr "域名已被其他服务占用"
+
+msgid "not deployed"
+msgstr "未部署"
+
+msgid "DNS record conflicts"
+msgstr "DNS 记录冲突"
+
+msgid "Ingress DNS records"
+msgstr "接入规则 DNS 记录"
+
+msgid "missing %s records"
+msgstr "缺少 %s 条记录"
+
+msgid "All checks passed."
+msgstr "全部检查通过。"
+
+msgid "Cloudflare authorization is required to repair. Re-authorize below."
+msgstr "修复需要 Cloudflare 授权，请在下方重新授权。"
+
+msgid "OK"
+msgstr "正常"
+
+msgid "Repair"
+msgstr "修复"
+
+msgid "Unbind"
+msgstr "解绑"
+
+msgid "Unbind deletes the tunnel, DNS records and the switch service from Cloudflare. Ingress rules are kept locally."
+msgstr "解绑会从 Cloudflare 删除隧道、DNS 记录和开关服务。接入规则保留在本地。"
+
+msgid "Unbound! Reloading…"
+msgstr "已解绑！正在刷新…"
+
+msgid "Unbind failed — check output above"
+msgstr "解绑失败——请检查上方输出"
 
 msgid "The router runs %s and shows an authorization URL."
 msgstr "路由器将运行 %s 并显示一个授权链接。"
 
-msgid "Deploy the switch service (a Cloudflare Worker) to %s"
-msgstr "把开关服务（Cloudflare Worker）部署到 %s"
+msgid "Open it on any device, log into Cloudflare, pick your domain and authorize."
+msgstr "在任意设备打开它，登录 Cloudflare，选择你的域名并授权。"
 
-msgid "Fully automatic from the router, no computer or Node.js needed."
-msgstr "全程由路由器自动完成，无需电脑、无需 Node.js。"
+msgid "waiting for auth URL…"
+msgstr "等待授权 URL…"
 
-msgid "The switch domain %s is already bound to another service (Worker “%s”)."
-msgstr "开关域名 %s 已绑定在其他服务（Worker “%s”）上。"
+msgid "Start Login"
+msgstr "开始授权"
 
-msgid "The switch domain %s already has a %s DNS record. Delete it in the Cloudflare dashboard (DNS app), or change the switch hostname in Settings, then retry."
-msgstr "开关域名 %s 已有 %s 类型的 DNS 记录。请在 Cloudflare 面板（DNS 应用）删除该记录，或在「设置」中更换开关主机名后重试。"
+msgid "Authorized! Loading next step…"
+msgstr "授权成功！正在进入下一步…"
 
-msgid "Prefer a computer? The classic bundle is still available: run %s on the router and follow the README inside."
-msgstr "想用电脑？经典 bundle 方式仍可用：在路由器上运行 %s 并按其中 README 操作。"
+msgid "cloudflared exited before the certificate was fetched:"
+msgstr "证书尚未拉取，cloudflared 已退出："
 
-msgid "Mode: %s — change it later in Settings."
-msgstr "模式：%s——之后可在「设置」中更改。"
+msgid "Fix the issue (e.g. router DNS), reload this page and try again."
+msgstr "修复问题（如路由器 DNS）后刷新本页重试。"
 
+msgid "Create the tunnel on your Cloudflare account (uses the authorization from step ①)."
+msgstr "在你的 Cloudflare 账号上创建隧道（使用步骤 ① 的授权）。"
+
+msgid "The tunnel was deleted on Cloudflare. Clicking Create below will recreate it automatically (new tunnel id, DNS routes re-published in step ⑥)."
+msgstr "隧道在 Cloudflare 侧被删除了。点击下方“创建”会自动重建（新隧道 ID，DNS 路由会在步骤⑥重新发布）。"
+
+msgid "Cloudflare rejected the saved certificate. Re-run step ① first."
+msgstr "Cloudflare 拒绝了已保存的证书。请先重新执行第 ① 步。"
+
+msgid "Create Tunnel"
+msgstr "创建隧道"
+
+msgid "Created! Loading next step…"
+msgstr "创建成功！正在进入下一步…"
+
+msgid "Pick the domain for your tunnel hostnames (fetched automatically from your Cloudflare account)."
+msgstr "选择隧道主机名所用的域名（自动从你的 Cloudflare 账户获取）。"
+
+msgid "Fetch Domains"
+msgstr "获取域名列表"
+
+msgid "Save Domain"
+msgstr "保存域名"
+
+msgid "loading…"
+msgstr "加载中…"
+
+msgid "Refetch"
+msgstr "重新获取"
+
+msgid "Saved! Loading next step…"
+msgstr "已保存！正在进入下一步…"
 
 msgid "Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf."
 msgstr "授权路由器代表你部署开关服务（Cloudflare Worker）。"
 
+msgid "Scan the QR code with your phone, or open the link, then tap Allow — that is the only manual step."
+msgstr "用手机扫描二维码或打开链接，点一下“允许”即可——这是唯一需要动手的一步。"
 
-msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. Unmatched hostnames/paths always return 404."
-msgstr "每条规则把一个内网服务以 <code>子域名.域名</code> 形式经隧道开放到公网。未匹配的主机名/路径一律返回 404。"
+msgid "Start Authorization"
+msgstr "开始授权"
+
+msgid "Failed: %s"
+msgstr "失败：%s"
+
+msgid "Already authorized! Loading next step…"
+msgstr "已授权！正在进入下一步…"
+
+msgid "Unexpected response: %s"
+msgstr "意外响应：%s"
+
+msgid "The page is served by Cloudflare and may show \"Wrangler\" — that is Cloudflare's official CLI identity and is expected."
+msgstr "该页面由 Cloudflare 提供，可能显示“Wrangler”字样——这是 Cloudflare 官方命令行工具的标识，属正常现象。"
+
+msgid "Waiting for authorization…"
+msgstr "等待授权…"
+
+msgid "The code expired (5 minutes). Click Start Authorization again."
+msgstr "授权码已过期（5 分钟）。请重新点击“开始授权”。"
 
 msgid "Deploy the switch service (a Cloudflare Worker) to your subdomain of %s."
 msgstr "把开关服务（Cloudflare Worker）部署到你在 %s 下的子域名。"
 
+msgid "Fully automatic from the router, no computer or Node.js needed."
+msgstr "全程由路由器自动完成，无需电脑、无需 Node.js。"
+
 msgid "Full name: %s"
 msgstr "完整域名：%s"
 
+msgid "Switch subdomain"
+msgstr "开关域名"
+
+msgid "Deploy Now"
+msgstr "立即部署"
+
+msgid "The switch domain %s is already bound to another service (Worker “%s”)."
+msgstr "开关域名 %s 已绑定在其他服务（Worker “%s”）上。"
+
 msgid "You can type a different subdomain above and retry, or take over the domain (this unbinds it from that service)."
 msgstr "可以在上方换一个子域名再试，或直接接管该域名（会把它从那个服务上解绑）。"
+
+msgid "Take Over and Deploy"
+msgstr "接管并部署"
+
+msgid "Cancel"
+msgstr "取消"
 
 msgid "The switch domain %s already has a %s DNS record."
 msgstr "开关域名 %s 已有一条 %s 类型的 DNS 记录。"
@@ -567,8 +219,369 @@ msgstr "开关域名 %s 已有一条 %s 类型的 DNS 记录。"
 msgid "Pick a different subdomain above and retry, or delete that record in the Cloudflare dashboard (DNS app) first."
 msgstr "请在上方换一个子域名再试，或先到 Cloudflare 控制台（DNS 应用）删除那条记录。"
 
+msgid "Prefer a computer? The classic bundle is still available: run %s on the router and follow the README inside."
+msgstr "想用电脑？经典 bundle 方式仍可用：在路由器上运行 %s 并按其中 README 操作。"
+
+msgid "Deployed! Publishing DNS records…"
+msgstr "部署完成！正在发布 DNS 记录…"
+
+msgid "Deploy failed — check output above"
+msgstr "部署失败——请检查上方输出"
+
 msgid "Setup is complete. The switch daemon is running in %s mode."
 msgstr "配置已完成，开关守护正在「%s」模式下运行。"
 
 msgid "Open Status Page"
 msgstr "打开状态页"
+
+msgid "Verify the remote switch from the router, then enable the daemon and go to the status page."
+msgstr "从路由器验证外网开关，然后启用守护并进入状态页。"
+
+msgid "Verify"
+msgstr "验证"
+
+msgid "All checks passed. Daemon enabled. Opening status page…"
+msgstr "全部通过。开关守护已启用。正在打开状态页…"
+
+msgid "Mode: %s — change it later in Settings."
+msgstr "模式：%s——之后可在「设置」中更改。"
+
+msgid "HomeLede intranet exposure via a free Cloudflare Tunnel."
+msgstr "HomeLede 基于 Cloudflare Tunnel 的全免费内网穿透。"
+
+msgid "HomeTunnel"
+msgstr "HomeTunnel"
+
+msgid "Setup is not complete. Open Access to run setup."
+msgstr "设置尚未完成。请到「接入」页完成设置。"
+
+msgid "Open Access"
+msgstr "打开接入页"
+
+msgid "The tunnel was deleted on Cloudflare. Open Access — unbind will guide you through re-setup."
+msgstr "隧道已在 Cloudflare 上被删除。请到「接入」页，解绑后会引导重新设置。"
+
+msgid "Cloudflare rejected the saved certificate. Open Access — unbind will guide you through re-setup."
+msgstr "Cloudflare 拒绝了保存的证书。请到「接入」页，解绑后会引导重新设置。"
+
+msgid "running"
+msgstr "运行中"
+
+msgid "stopped"
+msgstr "已停止"
+
+msgid "Tunnel service"
+msgstr "隧道服务"
+
+msgid "Tunnel on Cloudflare"
+msgstr "Cloudflare 侧隧道"
+
+msgid "ok"
+msgstr "正常"
+
+msgid "deleted on Cloudflare"
+msgstr "已在 Cloudflare 删除"
+
+msgid "certificate rejected"
+msgstr "证书被拒"
+
+msgid "unknown"
+msgstr "未知"
+
+msgid "on-demand (remote switch)"
+msgstr "按需（外网开关控制）"
+
+msgid "always-on"
+msgstr "常开"
+
+msgid "Switch daemon"
+msgstr "开关守护进程"
+
+msgid "Remote switch state"
+msgstr "外网开关状态"
+
+msgid "Please wait…"
+msgstr "请稍候…"
+
+msgid "done"
+msgstr "完成"
+
+msgid "failed"
+msgstr "失败"
+
+msgid "Turn On (%d min)"
+msgstr "开启隧道（%d 分钟）"
+
+msgid "Turn Off"
+msgstr "关闭隧道"
+
+msgid "Remote Switch"
+msgstr "外网开关"
+
+msgid "Switch Bookmarks"
+msgstr "开关书签"
+
+msgid "Save these as bookmarks on any device to open/close the tunnel from anywhere:"
+msgstr "保存为任意设备的浏览器书签，即可随时随地打开/关闭隧道："
+
+msgid "Copy \"ON\" link"
+msgstr "复制“开”链接"
+
+msgid "Copy \"OFF\" link"
+msgstr "复制“关”链接"
+
+msgid "Recent switch daemon log"
+msgstr "开关守护日志"
+
+msgid "(empty)"
+msgstr "（空）"
+
+msgid "unreachable"
+msgstr "不可达"
+
+msgid "on"
+msgstr "开启"
+
+msgid "TTL remaining: %d min"
+msgstr "剩余可用：%d 分钟"
+
+msgid "auto-renewed"
+msgstr "已自动续期"
+
+msgid "off"
+msgstr "关闭"
+
+msgid "(log unavailable)"
+msgstr "（日志不可用）"
+
+msgid "HomeTunnel — Ingress Rules"
+msgstr "HomeTunnel — 接入规则"
+
+msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. Unmatched hostnames/paths always return 404."
+msgstr "每条规则把一个内网服务以 <code>子域名.域名</code> 形式经隧道开放到公网。未匹配的主机名/路径一律返回 404。"
+
+msgid "Rules"
+msgstr "接入规则"
+
+msgid "Enabled"
+msgstr "启用"
+
+msgid "Name"
+msgstr "名称"
+
+msgid "Subdomain"
+msgstr "子域名"
+
+msgid "Service URL"
+msgstr "服务地址"
+
+msgid "cloudflared service syntax, e.g. <code>http://192.168.1.10:5000</code>, <code>ssh://192.168.1.10:22</code>, <code>tcp://…</code>"
+msgstr "cloudflared 服务语法，如 <code>http://192.168.1.10:5000</code>、<code>ssh://192.168.1.10:22</code>、<code>tcp://…</code>"
+
+msgid "Path regex"
+msgstr "路径正则"
+
+msgid "Optional. Only forward matching paths, e.g. <code>^/api(/.*)?$</code>"
+msgstr "可选。仅转发匹配的路径，如 <code>^/api(/.*)?$</code>"
+
+msgid "Origin Host header"
+msgstr "回源 Host 头"
+
+msgid "Optional. Rewrite the Host header sent to the origin (needed behind a name-based reverse proxy)."
+msgstr "可选。改写发往源站的 Host 头（源站在基于域名的反代后面时需要）。"
+
+msgid "Skip TLS verify"
+msgstr "跳过 TLS 校验"
+
+msgid "Skip certificate verification for https origins (self-signed certs)."
+msgstr "对 https 源站跳过证书校验（自签名证书）。"
+
+msgid "Connect timeout (s)"
+msgstr "连接超时（秒）"
+
+msgid "Data traffic"
+msgstr "访问流量"
+
+msgid "Always-on mode · remote switch not used"
+msgstr "常开模式 · 未使用外网开关"
+
+msgid "Bookmark"
+msgstr "书签"
+
+msgid "Any device · no app needed"
+msgstr "任意设备 · 无需 App"
+
+msgid "Remote switch service"
+msgstr "外网开关服务"
+
+msgid "ON · %d min left"
+msgstr "ON · 剩余 %d 分钟"
+
+msgid "OpenWrt router"
+msgstr "OpenWrt 路由器"
+
+msgid "Polls commands every %ds"
+msgstr "每 %d 秒拉取开关指令"
+
+msgid "Tunnel process"
+msgstr "隧道进程"
+
+msgid "start / stop"
+msgstr "拉起 / 熄灭"
+
+msgid "① Bookmark ON / OFF"
+msgstr "① 书签开 / 关"
+
+msgid "② Poll commands"
+msgstr "② 轮询指令"
+
+msgid "Browser"
+msgstr "浏览器"
+
+msgid "Any external device"
+msgstr "外网任意设备"
+
+msgid "Cloudflare edge network"
+msgstr "Cloudflare 边缘网络"
+
+msgid "%d domains"
+msgstr "%d 个域名"
+
+msgid "Auto-renew +%d min on traffic"
+msgstr "有流量自动续期 +%d 分钟"
+
+msgid "Tunnel off · unreachable"
+msgstr "隧道未开启 · 不可达"
+
+msgid "③ HTTPS"
+msgstr "③ HTTPS"
+
+msgid "LAN"
+msgstr "内网 LAN"
+
+msgid "No ingress rules yet"
+msgstr "还没有接入规则"
+
+msgid "+%d more"
+msgstr "还有 %d 条"
+
+msgid "Wizard incomplete - topology pending"
+msgstr "向导未完成 · 拓扑待生成"
+
+msgid "Finish the 7-step wizard to see your live topology here."
+msgstr "完成 7 步向导后，这里将展示你的实时隧道拓扑。"
+
+msgid "Live topology generated from your configuration."
+msgstr "由你的配置实时生成的拓扑图。"
+
+msgid "Setup is not complete. Run the wizard first."
+msgstr "配置尚未完成，请先运行向导。"
+
+msgid "Open Wizard"
+msgstr "打开向导"
+
+msgid "Tunnel Topology"
+msgstr "隧道拓扑"
+
+msgid "auto-off after %dh hard cap"
+msgstr "%d 小时硬上限自动熄灭"
+
+msgid "no hard cap"
+msgstr "无硬上限"
+
+msgid "Switch signaling"
+msgstr "开关信令"
+
+msgid "Traffic (HTTPS)"
+msgstr "访问流量（HTTPS）"
+
+msgid "Copied ✓"
+msgstr "已复制 ✓"
+
+msgid "HomeTunnel — Settings"
+msgstr "HomeTunnel — 设置"
+
+msgid "Mode and daemon parameters. TTL-family values are baked into the Worker deployment bundle — after changing them, regenerate and redeploy the bundle."
+msgstr "模式与开关参数。TTL 族参数会固化进开关部署包——修改后需重新生成并重新部署。"
+
+msgid "General"
+msgstr "基本设置"
+
+msgid "Recommended. on-demand: tunnel closed by default, opened from outside via the remote switch. always-on: tunnel connected at boot."
+msgstr "推荐按需。按需：隧道默认关闭，通过外网开关从外部打开。常开：开机即连接。"
+
+msgid "Tunnel name"
+msgstr "隧道名称"
+
+msgid "Domain"
+msgstr "域名"
+
+msgid "Locked after binding (falls back to editable after a router reinstall, when the Cloudflare authorization is lost). To re-choose, unbind it first."
+msgstr "绑定后锁定（路由器重装后 Cloudflare 授权丢失时，会退回可编辑状态）。如需更换，请先解除绑定。"
+
+msgid "On-demand parameters"
+msgstr "按需模式参数"
+
+msgid "Default TTL (min)"
+msgstr "默认 TTL（分钟）"
+
+msgid "How long the tunnel stays open after \"on\". Append ?min=N to the \"on\" link to override, up to the max."
+msgstr "“开”后隧道保持打开的时长。在“开”链接后加 ?min=N 可临时指定，最大不超过上限。"
+
+msgid "Max TTL (min)"
+msgstr "最大 TTL（分钟）"
+
+msgid "Auto-renew amount (min)"
+msgstr "自动续期幅度（分钟）"
+
+msgid "Renewal amount when traffic is detected near TTL expiry (in-use auto-renew)."
+msgstr "临近 TTL 到期且检测到真实流量时，每次续期的时长（使用中自动续期）。"
+
+msgid "Auto-renew while in use"
+msgstr "使用中自动续期"
+
+msgid "While the tunnel has real traffic (new requests / active streams), keep renewing the TTL. Idle → auto close."
+msgstr "隧道有真实流量（新请求/活跃流）时持续续期 TTL；闲置则到期自动关闭。"
+
+msgid "Hard cap (seconds)"
+msgstr "硬熔断（秒）"
+
+msgid "Local fuse: force-stop after this many seconds of continuous run; renewals do NOT extend it. 0 = unlimited (not recommended with auto-renew)."
+msgstr "本地熔断：连续运行超过该秒数强制停止，续期不会延长它。0 = 不限（开启自动续期时不建议）。"
+
+msgid "Poll interval (s)"
+msgstr "轮询间隔（秒）"
+
+msgid "Fail-closed threshold"
+msgstr "失败熔断阈值"
+
+msgid "Stop the tunnel after this many consecutive switch-service fetch failures."
+msgstr "开关服务连续拉取失败达到该次数后停止隧道。"
+
+msgid "cloudflared metrics port"
+msgstr "cloudflared metrics 端口"
+
+msgid "Local Prometheus metrics port of cloudflared (traffic signal for auto-renew)."
+msgstr "cloudflared 本地指标端口（自动续期的流量信号源）。"
+
+msgid "Edge protocol"
+msgstr "边缘协议"
+
+msgid "QUIC is default; switch to http2 if UDP 7844 is degraded/blocked on your line."
+msgstr "默认 QUIC；线路 UDP 7844 劣化/受阻时切 http2。"
+
+msgid "Status"
+msgstr "状态"
+
+msgid "Topology"
+msgstr "拓扑"
+
+msgid "Access"
+msgstr "接入"
+
+msgid "Ingress Rules"
+msgstr "接入规则"
+
+msgid "Settings"
+msgstr "设置"
+

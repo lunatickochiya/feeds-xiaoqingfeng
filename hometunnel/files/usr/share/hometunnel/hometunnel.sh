@@ -509,28 +509,89 @@ cmd_zones() {
 	rm -f "$tmp.n" "$tmp.s"
 }
 
-cmd_cleanup() {
-	local name id ans
+cmd_unbind() {
+	local name id domain ctl_host ans tok acct zone_id i subdomain
 	name=$(get_ tunnel_name hometunnel)
 	id=$(get_ tunnel_id '')
-	/etc/init.d/hometunnel stop 2>/dev/null
-	/etc/init.d/hometunnel-ctl stop 2>/dev/null
-	if [ -n "$id" ]; then
-		echo "About to delete tunnel '$name' ($id) from Cloudflare."
-		echo "DNS CNAME records and the Worker (ctl.$(get_ domain '')) must be removed manually."
+	domain=$(get_ domain '')
+	ctl_host=$(get_ ctl_hostname ctl)
+
+	# 确认: CLI 交互式（Type DELETE）; LuCI job 路径传 yes（UI 已有二次确认框）
+	if [ "${1:-}" != "yes" ]; then
+		echo "About to delete tunnel '$name' and ALL published records from Cloudflare:"
+		[ -n "$id" ] && echo "  - tunnel $name ($id)"
+		[ -n "$domain" ] && echo "  - DNS CNAME records for enabled ingress rules"
+		[ -n "$domain" ] && echo "  - switch service Worker (ctl: $ctl_host.$domain)"
+		echo "Ingress rules and Settings are kept locally."
 		printf 'Type DELETE to confirm: '
 		read -r ans
 		[ "$ans" = "DELETE" ] || { msg "aborted"; exit 1; }
+	fi
+
+	# 1) 停服务
+	/etc/init.d/hometunnel stop 2>/dev/null
+	/etc/init.d/hometunnel-ctl stop 2>/dev/null
+
+	# 2) 删 DNS CNAME（cert.pem token 逐规则删除；失败不阻断——幂等重试安全）
+	if [ -n "$id" ] && [ -n "$domain" ]; then
+		i=0
+		while uci -q show hometunnel | grep -q "^hometunnel.@ingress\[$i\]="; do
+			subdomain=$(uci -q get "hometunnel.@ingress[$i].subdomain" || echo '')
+			[ -n "$subdomain" ] && delete_dns_record "$subdomain.$domain" || true
+			i=$((i + 1))
+		done
+	fi
+
+	# 3) 删 Worker（OAuth token；域绑定随之消失；未授权或已删则跳过）
+	tok=$(oauth_valid_token 2>/dev/null)
+	if [ -n "$tok" ] && [ -n "$domain" ]; then
+		delete_worker "$tok" || msg "WARN: worker delete skipped (not authorized or already gone)"
+	fi
+
+	# 4) 删隧道（凭据恢复路径）
+	if [ -n "$id" ]; then
 		cf_run tunnel delete "$id" 2>&1 || msg "WARN: tunnel delete failed (delete in CF dashboard)"
 	fi
+
+	# 5) 清本地
 	rm -f "$ETC/config.yml" "$KEY_FILE"
 	rm -f "$ETC/.cloudflared/"*.json
 	rm -f "$RUNDIR/dns-routed" "$RUNDIR/worker-verified" "$RUNDIR/worker-deployed"
 	uci -q delete "$UCI_CONF.global.tunnel_id"
 	uci -q delete "$UCI_CONF.global.domain"
 	uci commit "$UCI_CONF"
-	msg "unbound: tunnel deleted, domain cleared, wizard marks reset."
+	msg "unbound: tunnel, DNS records, switch service deleted; wizard marks reset."
 	msg "ingress rules kept (subdomains only, hostnames re-computed on rebind); cert.pem kept (Cloudflare authorization survives)."
+}
+
+# 删除单条 DNS CNAME（cert.pem token + API v4 按名称查删）
+delete_dns_record() {
+	local hostname="$1" ztok zone_id rec_id resp
+	ztok=$(cert_api_token) || return 1
+	[ -n "$ztok" ] || return 1
+	zone_id=$(cert_json_field zoneID) || return 1
+	resp=$(curl -fsS --max-time 15 -H "Authorization: Bearer $ztok" \
+		"https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?type=CNAME&name=$hostname&per_page=5" 2>/dev/null) || {
+		msg "WARN: DNS lookup failed for $hostname"; return 1; }
+	rec_id=$(echo "$resp" | jsonfilter -e '@.result[0].id' 2>/dev/null)
+	[ -n "$rec_id" ] || { msg "OK: no DNS record for $hostname (already clean)"; return 0; }
+	curl -fsS --max-time 15 -X DELETE -H "Authorization: Bearer $ztok" \
+		"https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records/$rec_id" >/dev/null 2>&1 \
+		&& msg "OK: DNS record $hostname deleted" \
+		|| msg "WARN: DNS delete failed for $hostname"
+}
+
+# 删除 Worker（OAuth token + 域绑定级联；WSR 帐号级脚本删除）
+delete_worker() {
+	local tok="$1" acct
+	acct=$(grep -oE '"account_id":"[^"]+"' "$OAUTH_JSON" 2>/dev/null | cut -d'"' -f4)
+	[ -n "$acct" ] || { acct=$(oauth_query_account_id "$tok") || return 1; }
+	curl -fsS --max-time 20 -X DELETE \
+		-H "Authorization: Bearer $tok" \
+		"https://api.cloudflare.com/client/v4/accounts/$acct/workers/scripts/$WORKER_NAME" \
+		>/dev/null 2>&1 || return 1
+	msg "OK: switch service Worker deleted"
+	return 0
 }
 
 cmd_apply_mode() {
@@ -739,6 +800,105 @@ cmd_oauth_clear() {
 #   {"state":"conflict","kind":"worker","by":"llm-tunnel-ctl"}   域名挂在其他 Worker（需用户确认接管）
 #   {"state":"conflict","kind":"dns","by":"CNAME"}               主机名已有普通 DNS 记录（需手工处理）
 #   {"state":"error","error":"..."}
+# probe — 锁定态配置总览 + 在线健康（向导锁定态/状态聚合用）。
+# JSON 输出: bound, domain, ctl_hostname, ctl_url, mode, oauth, worker, dns, cert
+cmd_probe() {
+	local domain ctl_host base tok acct zone_id occ tunnel
+	domain=$(get_ domain '')
+	ctl_host=$(get_ ctl_hostname ctl)
+	base=$(ctl_base_url)
+
+	# oauth 授权态（文件在 + token 能换出）
+	local oauth=unknown
+	if [ -f "$OAUTH_JSON" ]; then
+		tok=$(oauth_valid_token 2>/dev/null)
+		[ -n "$tok" ] && oauth=ok || oauth=expired
+	else
+		oauth=missing
+	fi
+
+	# 未绑定则到此为止
+	if [ -z "$(get_ tunnel_id '')" ] || [ -z "$domain" ]; then
+		printf '{"bound":false,"oauth":"%s"}\n' "$oauth"
+		return 0
+	fi
+
+	# worker 域名绑定 + 占用检查
+	local worker=unknown dns=unknown
+	if [ "$oauth" = "ok" ]; then
+		acct=$(grep -oE '"account_id":"[^"]+"' "$OAUTH_JSON" 2>/dev/null | cut -d'"' -f4)
+		[ -n "$acct" ] || acct=$(oauth_query_account_id "$tok") || acct=''
+		zone_id=$(cf_zone_id "$tok" "$domain") || zone_id=''
+		if [ -n "$acct" ]; then
+			occ=$(ctl_domain_check "$tok" "$acct" "$ctl_host.$domain" "$zone_id")
+			case "$occ" in
+				clean) worker=missing ;;
+				worker:$WORKER_NAME) worker=ok ;;
+				worker:*) worker=foreign ;;
+				dns:*) worker=blocked ;;
+				*) worker=unknown ;;
+			esac
+		fi
+	else
+		worker=unknown
+	fi
+
+	# DNS CNAME（cert.pem token: 逐规则检查 enabled 规则的 CNAME 存在性）
+	if [ -n "$(get_ tunnel_id '')" ]; then
+		dns=$(check_dns_all)
+	fi
+
+	# 隧道存活（cert.pem token; 被删 = 配置失效, 需解绑重设）
+	local tunnel
+	tunnel=$(cf_tunnel_state)
+	case "$tunnel" in
+		exists) tunnel=ok ;;
+		missing) tunnel=deleted ;;
+		auth-failed) tunnel=auth-failed ;;
+		*) tunnel=unknown ;;
+	esac
+
+	printf '{"bound":true,"domain":"%s","ctl_hostname":"%s","ctl_url":"%s","mode":"%s","oauth":"%s","worker":"%s","dns":"%s","tunnel":"%s"}\n' \
+		"$domain" "$ctl_host" "$base" "$(get_ mode ondemand)" "$oauth" "$worker" "$dns" "$tunnel"
+}
+
+# route-and-regen — uci reload trigger 服务端联动入口:
+# 增量发布 DNS CNAME + 重建 config.yml + 平滑重启数据面。
+# bound=false 时 route 跳过（无远端可发布）、regen 无害（config.yml 仅含控制面占位）。
+cmd_route_and_regen() {
+	local rc=0
+	if [ -n "$(get_ tunnel_id '')" ] && [ -n "$(get_ domain '')" ]; then
+		cmd_route || rc=1
+	fi
+	cmd_regen || rc=1
+	return "$rc"
+}
+
+# 检查全部 enabled 规则的 CNAME（返回 ok|missing:<n>|unknown）
+check_dns_all() {
+	local ztok zone_id i=0 subdomain hostname resp missing=0 checked=0
+	ztok=$(cert_api_token) || { echo unknown; return; }
+	[ -n "$ztok" ] || { echo unknown; return; }
+	zone_id=$(cert_json_field zoneID) || { echo unknown; return; }
+	while uci -q show hometunnel | grep -q "^hometunnel.@ingress\[$i\]="; do
+		local enabled subdomain
+		enabled=$(uci -q get "hometunnel.@ingress[$i].enabled" || echo 1)
+		if [ "$enabled" = "1" ] || [ "$enabled" = "true" ]; then
+			subdomain=$(uci -q get "hometunnel.@ingress[$i].subdomain" || echo '')
+			if [ -n "$subdomain" ]; then
+				hostname="$subdomain.$(get_ domain '')"
+				resp=$(curl -fsS --max-time 10 -H "Authorization: Bearer $ztok" \
+					"https://api.cloudflare.com/client/v4/zones/$zone_id/dns_records?type=CNAME&name=$hostname&per_page=1" 2>/dev/null)
+				checked=$((checked + 1))
+				echo "$resp" | jsonfilter -e '@.result[0].id' 2>/dev/null | grep -q . || missing=$((missing + 1))
+			fi
+		fi
+		i=$((i + 1))
+	done
+	[ "$checked" -eq 0 ] && { echo "none"; return; }
+	[ "$missing" -eq 0 ] && echo ok || echo "missing:$missing"
+}
+
 cmd_deploy_check() {
 	local tok acct domain ctl_host zone_id occ
 	domain=$(get_ domain '')
@@ -955,7 +1115,9 @@ case "${1:-}" in
 	status)     cmd_status ;;
 	check)      cmd_check ;;
 	zones)      cmd_zones ;;
-	cleanup)    cmd_cleanup ;;
+	unbind)     shift; cmd_unbind "$@" ;;
+	route-and-regen) cmd_route_and_regen ;;
+	probe)      cmd_probe ;;
 	apply-mode) cmd_apply_mode ;;
 	mark)       shift; cmd_mark "$@" ;;
 	set)        shift; cmd_set "$@" ;;
@@ -981,7 +1143,9 @@ usage: hometunnel.sh <command>
   status                human-readable status
   check                 verify tunnel_id against Cloudflare (via cert.pem token)
   zones                 list all Cloudflare zones (domains) via cert.pem token
-  cleanup               delete tunnel + local cleanup
+  unbind                delete tunnel + DNS records + switch service (full unbind)
+  route-and-regen       publish DNS CNAMEs + regen config (uci reload hook)
+  probe                 bound config + online health (locked-state overview)
   apply-mode            apply UCI mode to init enable states
   set <key> <value>     set a global UCI option (wizard backend)
   genkey                (re)generate ctl.key

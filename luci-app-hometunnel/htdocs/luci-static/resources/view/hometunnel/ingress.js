@@ -63,13 +63,23 @@ return view.extend({
 		return m.render().then(function (node) { return htui.apply(node); });
 	},
 
-	/* 保存后重新生成 config.yml 并平滑重启数据面（uci-applied 事件范式，tinyproxy 同款） */
-	handleSaveApply: function (ev, mode) {
-		var Fn = L.bind(function () {
-			fs.exec('/usr/share/hometunnel/hometunnel.sh', ['regen']);
-			document.removeEventListener('uci-applied', Fn);
-		}, this);
-		document.addEventListener('uci-applied', Fn);
-		return this.super('handleSaveApply', [ev, mode]);
+	/* 保存并应用后: 增量发布 DNS CNAME → 重建 config.yml → 平滑重启数据面。
+	   uci-applied 由 ui.js apply 轮询成功时派发（apply_display 秒后整页刷新，
+	   窗口内执行）; route 幂等，已有 CNAME 跳过 */
+	load: function () {
+		var HT = '/usr/share/hometunnel/hometunnel.sh';
+		var self = this;
+		document.addEventListener('uci-applied', function () {
+			/* 绑定完成才有远端可发布; 未绑定时只 regen（向导会在部署时统一发布） */
+			fs.exec(HT, ['probe']).then(function (res) {
+				var st = null;
+				try { st = JSON.parse((res.stdout || '').trim()); } catch (e) {}
+				if (st && st.bound) {
+					fs.exec(HT, ['job', 'route', HT, 'route']);
+				}
+				return fs.exec(HT, ['regen']);
+			}).catch(function () {});
+		});
+		return uci.load('hometunnel');
 	}
 });

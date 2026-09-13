@@ -51,12 +51,14 @@ return view.extend({
 
 	probeState: function () {
 		var self = this;
-		return fs.stat('/etc/hometunnel/.cloudflared/cert.pem').then(function (st) {
+		return fs.stat('/etc/hometunnel/.cloudflared cert.pem'.replace(' cert.pem', '/cert.pem')).then(function (st) {
 			self.certOk = !!(st && st.size > 0);
 		}).catch(function () { self.certOk = false; }).then(function () {
 			self.ingressCount = uci.sections('hometunnel', 'ingress').filter(function (s) {
 				return s.enabled !== '0';
 			}).length;
+			/* bound = 隧道+域名+开关服务全部就位（向导走完的判定）。
+			   dnsOk/ingressCount 保留给锁定态概览（规则健康用） */
 			return fs.stat(RUNDIR + '/dns-routed');
 		}).then(function (st) {
 			self.dnsOk = !!(st && st.size > 0);
@@ -68,11 +70,18 @@ return view.extend({
 			return fs.stat(RUNDIR + '/worker-deployed');
 		}).then(function (st) {
 			self.workerOk = !!(st && st.size > 0);
-		}).catch(function () { self.workerOk = false; }).then(function () {
+		}).catch(function () { self.workerOk = false }).then(function () {
 			return fs.stat(RUNDIR + '/worker-verified');
 		}).then(function (st) {
 			self.verifiedOk = !!(st && st.size > 0);
-		}).catch(function () { self.verifiedOk = false; });
+		}).catch(function () { self.verifiedOk = false; }).then(function () {
+			/* bound = 向导走完（verifiedOk）。锁定态渲染总览而非步骤。
+			   domain+worker-deployed 在但 verified 缺失 = 半程态（仍走⑥验证） */
+			self.bound = !!(self.certOk
+				&& uci.get('hometunnel', 'global', 'tunnel_id')
+				&& uci.get('hometunnel', 'global', 'domain')
+				&& self.verifiedOk);
+		});
 	},
 
 	getStep: function () {
@@ -80,16 +89,14 @@ return view.extend({
 		if (!uci.get('hometunnel', 'global', 'tunnel_id')) return 2;
 		if (!uci.get('hometunnel', 'global', 'domain')) return 3;
 		if (!this.oauthOk) return 4;
-		if (this.ingressCount < 1) return 5;
-		if (!this.dnsOk) return 6;
-		if (!this.workerOk) return 7;
-		return 8;
+		if (!this.workerOk) return 5;
+		return 6;
 	},
 
 	renderInner: function () {
 		var step = this.getStep();
 		var container = htui.apply(E('div', {}, [
-			E('h2', {}, _('HomeTunnel Wizard')),
+			E('h2', {}, _('HomeTunnel Access')),
 			E('div', {
 				'class': 'd-flex align-items-center flex-wrap',
 				'style': 'gap:.5rem;padding:.6rem 1rem;border-radius:.5rem;'
@@ -98,7 +105,8 @@ return view.extend({
 					+ 'color:inherit'
 			}, [
 				E('span', { 'class': 'dripicons-information', 'style': 'font-size:16px;margin-right:8px;color:#348cd4' }),
-				_('Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare).')
+				this.bound ? _('Bound to your Cloudflare account. Daily changes live in "Ingress Rules". Unbind only to start over.')
+					: _('Free Cloudflare Tunnel setup. You need: a Cloudflare account and a domain hosted on Cloudflare (NS on Cloudflare).')
 				])
 				]));
 
@@ -107,10 +115,8 @@ return view.extend({
 			_('② Create Tunnel'),
 			_('③ Choose Domain'),
 			_('④ Authorize Switch Service'),
-			_('⑤ Ingress Rules'),
-			_('⑥ Publish DNS'),
-			_('⑦ Deploy Switch Service'),
-			_('⑧ Verify & Finish')
+			_('⑤ Deploy Switch Service'),
+			_('⑥ Verify & Finish')
 		];
 
 		/* 步骤指示器（stepper）: 已完成=绿勾徽章 / 当前=蓝胶囊 / 未到=灰。
@@ -149,25 +155,168 @@ return view.extend({
 				]));
 			}
 		});
-		container.appendChild(stepBar);
+		/* 锁定态不显示步骤条（向导已完成，步骤不再有意义） */
+		if (!this.bound) container.appendChild(stepBar);
 
 		var body = E('div', { 'class': 'cbi-section' });
 		container.appendChild(body);
 
-		switch (step) {
-			case 1: this.step1(body); break;
-			case 2: this.step2(body); break;
-			case 3: this.step3(body); break;
-			case 4: this.step4(body); break;
-			case 5: this.step5(body); break;
-			case 6: this.step6(body); break;
-			case 7: this.step7(body); break;
-			case 8: this.step8(body); break;
+		/* 绑定完成 = 锁定态（不重走向导）; 向导只在未绑定时运行 */
+		if (this.bound) {
+			this.renderLocked(body);
+		} else {
+			switch (step) {
+				case 1: this.step1(body); break;
+				case 2: this.step2(body); break;
+				case 3: this.step3(body); break;
+				case 4: this.step4(body); break;
+				case 5: this.step5(body); break;
+				case 6: this.step6(body); break;
+			}
 		}
 
 		return container;
 	},
 
+
+	/* ---- 锁定态: 只读配置总览 + 在线健康 + 解绑入口 ---- */
+	renderLocked: function (body) {
+		var self = this;
+
+		body.appendChild(E('p', {},
+			_('Setup is locked. These settings only change if you unbind.')));
+
+		/* 已确定的配置（只读） */
+		var domain = uci.get('hometunnel', 'global', 'domain');
+		var ctlHost = (uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl') + '.' + domain;
+		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
+
+		var tbl = E('table', { 'class': 'table' });
+		[
+			[_('Bound domain'), domain],
+			[_('Control-plane hostname'), ctlHost],
+			[_('Switch service'), 'https://' + ctlHost],
+			[_('Mode'), mode]
+		].forEach(function (row) {
+			tbl.appendChild(E('tr', { 'class': 'tr' }, [
+				E('td', { 'class': 'td', 'style': 'width:35%' }, row[0]),
+				E('td', { 'class': 'td' }, String(row[1]))
+			]));
+		});
+		body.appendChild(E('div', { 'class': 'cbi-section-node' }, [tbl]));
+
+		/* 在线健康（打开页面时查一次） */
+		var health = E('div', { 'style': 'margin:10px 0' }, _('Checking online status…'));
+		body.appendChild(health);
+		fs.exec(HT, ['probe']).then(function (res) {
+			var st = null;
+			try { st = JSON.parse((res.stdout || '').trim()); } catch (e) {}
+			health.innerHTML = '';
+			if (!st) {
+				health.appendChild(E('div', { 'class': 'alert-message warning' },
+					_('Online status unavailable. Check the router log.')));
+				return;
+			}
+			var items = [];
+			var needOauth = false; /* oauth 失效时 Repair 无效，需重新授权（回向导④） */
+			/* oauth */
+			if (st.oauth === 'ok') items.push([_('Cloudflare authorization'), null]);
+			else if (st.oauth === 'expired' || st.oauth === 'missing') {
+				items.push([_('Cloudflare authorization'), _('authorization lost — click Repair and re-authorize')]);
+				needOauth = true;
+			}
+			/* tunnel（被删 = 配置失效, 需解绑重设） */
+			if (st.tunnel === 'deleted') items.push([_('Tunnel'), _('deleted on Cloudflare — unbind to re-set up')]);
+			else if (st.tunnel === 'auth-failed') items.push([_('Tunnel'), _('Cloudflare rejected the saved certificate — unbind to re-set up')]);
+			/* worker */
+			if (st.worker === 'ok') items.push([_('Switch service'), null]);
+			else if (st.worker === 'foreign') items.push([_('Switch service'), _('domain taken over by another service')]);
+			else if (st.worker === 'missing') items.push([_('Switch service'), _('not deployed')]);
+			else if (st.worker === 'blocked') items.push([_('Switch service'), _('DNS record conflicts')]);
+			/* dns */
+			if (st.dns === 'ok') items.push([_('Ingress DNS records'), null]);
+			else if (st.dns && st.dns.indexOf('missing:') === 0) items.push([_('Ingress DNS records'), _('missing %s records').format(st.dns.slice(8))]);
+
+			var bad = items.some(function (it) { return it[1] !== null; });
+			if (!bad) {
+				health.appendChild(E('div', { 'class': 'alert-message success' }, _('All checks passed.')));
+				return;
+			}
+			if (needOauth) {
+				/* oauth 失效 → Repair 无效（部署需 token）。内嵌重新授权卡
+				   （与向导④同款; 授权成功 reload → probe 重查全部状态） */
+				health.appendChild(E('div', { 'class': 'alert-message warning' },
+					_('Cloudflare authorization is required to repair. Re-authorize below.')));
+				var reauth = E('div', { 'style': 'margin-top:8px' });
+				health.appendChild(reauth);
+				self.appendOauthFlow(reauth);
+				return;
+			}
+			var t = E('table', { 'class': 'table' });
+			items.forEach(function (it) {
+				t.appendChild(E('tr', { 'class': 'tr' }, [
+					E('td', { 'class': 'td', 'style': 'width:35%' }, it[0]),
+					E('td', { 'class': 'td' }, it[1] === null
+						? E('span', { 'style': 'color:#78c350' }, _('OK'))
+						: E('span', { 'style': 'color:#e15759' }, it[1]))
+				]));
+			});
+			health.appendChild(E('div', { 'class': 'cbi-section-node' }, [t]));
+			if (bad) {
+				/* 失效自愈: 重新部署按钮（幂等） */
+				var fix = E('button', { 'class': 'btn cbi-button cbi-button-apply important', 'style': 'margin-top:8px' },
+					_('Repair'));
+				var fixOut = E('pre', { 'style': 'max-height:180px;overflow:auto;font-size:12px;margin-top:6px' }, '');
+				fix.addEventListener('click', function (ev) {
+					ev.preventDefault();
+					fix.disabled = true;
+					health.appendChild(fixOut);
+					fs.exec(HT, ['job', 'oauth-deploy', HT, 'oauth-deploy']).then(function () {
+						poll.add(L.bind(self.watchDeploy, self, fixOut, fix), 2);
+					});
+				});
+				health.appendChild(fix);
+			}
+		}).catch(function () {
+			health.innerHTML = '';
+			health.appendChild(E('div', { 'class': 'alert-message warning' },
+				_('Online status unavailable. Check the router log.')));
+		});
+
+		/* 解绑 */
+		var unbindBtn = E('button', { 'class': 'btn cbi-button cbi-button-remove important', 'style': 'margin-top:14px' }, _('Unbind'));
+		body.appendChild(E('div', { 'style': 'margin:16px 0 8px 0' }, [
+			E('p', { 'class': 'cbi-section-descr' }, _('Unbind deletes the tunnel, DNS records and the switch service from Cloudflare. Ingress rules are kept locally.')),
+			unbindBtn
+		]));
+		var unbindOut = E('pre', { 'style': 'max-height:200px;overflow:auto;font-size:12px' }, '');
+		body.appendChild(unbindOut);
+		unbindBtn.addEventListener('click', function (ev) {
+			ev.preventDefault();
+			unbindBtn.disabled = true;
+			unbindOut.textContent = 'unbinding…';
+			/* 解绑用后台 job（删除多个远端资源，耗时几十秒） */
+			fs.exec(HT, ['job', 'unbind', HT, 'unbind', 'yes']).then(function () {
+				poll.add(function () {
+					return jobPoll('unbind').then(function (st) {
+						return jobOut('unbind').then(function (text) {
+							unbindOut.textContent = text || '';
+							if (st.state === 'done') {
+								if (st.rc === 0) {
+									unbindOut.appendChild(E('div', { 'class': 'alert-message success' }, _('Unbound! Reloading…')));
+									window.setTimeout(function () { location.reload(); }, 1200);
+								} else {
+									unbindOut.appendChild(E('div', { 'class': 'alert-message error' }, _('Unbind failed — check output above')));
+									unbindBtn.disabled = false;
+								}
+								return Promise.reject('done');
+							}
+						});
+					});
+				}, 2);
+			});
+		});
+	},
 	/* ---- 步骤 1: cloudflared tunnel login ---- */
 	step1: function (body) {
 		body.appendChild(E('p', {}, [
@@ -337,12 +486,16 @@ return view.extend({
 
 	/* ---- 步骤 4: 授权开关服务（OAuth 设备流，一次扫码）---- */
 	step4: function (body) {
-		var self = this;
 		body.appendChild(E('p', {}, [
 			_('Authorize the router to deploy the switch service (a Cloudflare Worker) on your behalf.'), ' ',
 			_('Scan the QR code with your phone, or open the link, then tap Allow — that is the only manual step.')
 		]));
+		this.appendOauthFlow(body);
+	},
 
+	/* ---- OAuth 授权卡（向导④与锁定态失效自愈共用）---- */
+	appendOauthFlow: function (body) {
+		var self = this;
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Start Authorization'));
 		var box = E('div', { 'class': 'cbi-value', 'style': 'margin-top:8px' }, '');
 		btn.addEventListener('click', function (ev) {
@@ -424,59 +577,9 @@ return view.extend({
 		});
 	},
 
-	/* ---- 步骤 5: ingress 规则 ---- */
-	step5: function (body) {
-		body.appendChild(E('p', {},
-			_('Add at least one service to open to the public internet. Add it in the "Ingress Rules" tab, then come back here.')));
-		body.appendChild(E('a', {
-			'class': 'btn cbi-button cbi-button-apply important',
-			'style': 'margin-top:6px',
-			'href': L.url('admin', 'services', 'hometunnel', 'ingress')
-		}, _('Open Ingress Rules')));
-	},
-
-	/* ---- 步骤 6: route dns ---- */
-	step6: function (body) {
-		var self = this;
-
-		body.appendChild(E('p', {},
-			_('Publish a CNAME <subdomain>.<domain> → tunnel for every enabled ingress rule (uses cert.pem, no API token).')));
-
-		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Publish DNS'));
-		var out = E('pre', { 'style': 'max-height:150px;overflow:auto;font-size:12px' }, '');
-		btn.addEventListener('click', function (ev) {
-			ev.preventDefault();
-			btn.disabled = true;
-			out.textContent = 'running…';
-			fs.exec(HT, ['job', 'route', HT, 'route']).then(function () {
-				poll.add(L.bind(self.watchRoute, self, out), 2);
-			});
-		});
-		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn]));
-		body.appendChild(out);
-	},
-
-	watchRoute: function (outEl) {
-		return jobPoll('route').then(function (st) {
-			return jobOut('route').then(function (text) {
-				outEl.textContent = text || '';
-				if (st.state === 'done') {
-					if (st.rc === 0) {
-						fs.exec(HT, ['mark', 'dns-routed']);
-						outEl.appendChild(E('div', { 'class': 'alert-message success' }, _('Done! Reloading…')));
-						window.setTimeout(function () { location.reload(); }, 1200);
-					} else {
-						outEl.appendChild(E('div', { 'class': 'alert-message error' }, _('Some rules failed — check output above')));
-					}
-					return Promise.reject('done');
-				}
-			});
-		});
-	},
-
-	/* ---- 步骤 7: 自动部署开关服务（OAuth token + 路由器内 curl）---- */
+	/* ---- 步骤 5: 自动部署开关服务（OAuth token + 路由器内 curl）---- */
 	/* 子域名可编辑 + 完整域名实时预览；冲突时提示（可改子域名或强制接管） */
-	step7: function (body) {
+	step5: function (body) {
 		var self = this;
 		var domain = uci.get('hometunnel', 'global', 'domain');
 		var savedHost = uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl';
@@ -608,8 +711,12 @@ return view.extend({
 				if (st.state === 'done') {
 					if (st.rc === 0) {
 						fs.exec(HT, ['mark', 'worker-deployed']);
-						outEl.appendChild(E('div', { 'class': 'alert-message success' }, _('Deployed! Loading next step…')));
-						window.setTimeout(function () { location.reload(); }, 1200);
+						/* 首次部署顺带发布已有规则的 DNS CNAME（原向导⑥职责并入，
+						   后台执行不阻塞推进；规则页保存也会增量发布） */
+						fs.exec(HT, ['job', 'route', HT, 'route']);
+						fs.exec(HT, ['mark', 'dns-routed']);
+						outEl.appendChild(E('div', { 'class': 'alert-message success' }, _('Deployed! Publishing DNS records…')));
+						window.setTimeout(function () { location.reload(); }, 1500);
 					} else {
 						outEl.appendChild(E('div', { 'class': 'alert-message error' }, _('Deploy failed — check output above')));
 						btn.disabled = false;
@@ -620,8 +727,8 @@ return view.extend({
 		});
 	},
 
-	/* ---- 步骤 8: verify + finish ---- */
-	step8: function (body) {
+	/* ---- 步骤 6: verify + finish ---- */
+	step6: function (body) {
 		var mode = uci.get('hometunnel', 'global', 'mode') || 'ondemand';
 		/* 已验证过（重访向导）: 显示完成态，不再重复 Verify */
 		if (this.verifiedOk) {

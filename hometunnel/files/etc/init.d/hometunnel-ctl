@@ -49,3 +49,14 @@ start_service() {
 service_triggers() {
 	procd_add_reload_trigger hometunnel
 }
+
+reload_service() {
+	# UCI 配置变更（接入规则/开关参数）→ 服务端联动: 增量发布 DNS + 重建 config.yml
+	# bound 探测: 未绑定时 regen 无害（向导部署时统一发布）; route 幂等
+	logger -t "$NAME" "uci reload trigger: publishing DNS + regenerating config"
+	# job 后台异步执行（job_start 同名在跑会拒绝, 刚好防抖）; 结果看 route-regen.out
+	/usr/share/hometunnel/hometunnel.sh job route-regen /usr/share/hometunnel/hometunnel.sh route-and-regen 2>/dev/null
+	# 平滑重启守护自身（重读 UCI 参数）
+	stop
+	start
+}

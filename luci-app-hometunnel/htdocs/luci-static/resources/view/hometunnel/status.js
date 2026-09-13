@@ -99,8 +99,8 @@ return view.extend({
 
 			if (!configured) {
 				container.appendChild(E('div', { 'class': 'alert-message warning' }, [
-					E('p', {}, _('Setup is not complete. Run the wizard first.')),
-					E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Wizard'))
+					E('p', {}, _('Setup is not complete. Open Access to run setup.')),
+					E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Access'))
 				]));
 				return container;
 			}
@@ -109,9 +109,9 @@ return view.extend({
 		if (cfState === 'missing' || cfState === 'auth-failed') {
 			container.appendChild(E('div', { 'class': 'alert-message warning' }, [
 				E('p', {}, cfState === 'missing'
-					? _('The tunnel was deleted on Cloudflare. Re-run the wizard (it will recreate it automatically).')
-					: _('Cloudflare rejected the saved certificate. Re-run wizard step ① to re-authorize.')),
-				E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Wizard'))
+					? _('The tunnel was deleted on Cloudflare. Open Access — unbind will guide you through re-setup.')
+					: _('Cloudflare rejected the saved certificate. Open Access — unbind will guide you through re-setup.')),
+				E('a', { 'class': 'btn cbi-button cbi-button-apply important', 'href': L.url('admin', 'services', 'hometunnel', 'wizard') }, _('Open Access'))
 			]));
 		}
 
