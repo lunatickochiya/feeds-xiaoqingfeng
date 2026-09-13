@@ -408,7 +408,8 @@ oauth_refresh_token() {
 # oauth.json 结构: {"access_token":"...","expires_at":<epoch>,"refresh_token":"...","account_id":"..."}
 oauth_valid_token() {
 	local tok exp now resp
-	[ -f "$OAUTH_JSON" ] || die "not authorized (run oauth-start)"
+	rm -f "$RUNDIR/oauth-error"
+	[ -f "$OAUTH_JSON" ] || { echo "no-file" > "$RUNDIR/oauth-error"; die "not authorized (run oauth-start)"; }
 	tok=$(oauth_access_token)
 	exp=$(grep -oE '"expires_at":[0-9]+' "$OAUTH_JSON" 2>/dev/null | grep -oE '[0-9]+')
 	now=$(date +%s)
@@ -424,12 +425,17 @@ oauth_valid_token() {
 oauth_refresh() {
 	local rt resp tok exp new_rt
 	rt=$(oauth_refresh_token)
-	[ -n "$rt" ] || die "oauth: no refresh token saved — re-authorize (oauth-start)"
-	resp=$(curl -fsS --max-time 15 -X POST "$OAUTH_TOKEN_URL" \
+	[ -n "$rt" ] || { echo "no-refresh-token" > "$RUNDIR/oauth-error"; die "oauth: no refresh token saved — re-authorize (oauth-start)"; }
+	resp=$(curl -sS --max-time 15 -X POST "$OAUTH_TOKEN_URL" \
 		-H 'User-Agent: wrangler/4.40.0' \
 		--data-urlencode "grant_type=refresh_token" \
 		--data-urlencode "refresh_token=$rt" \
-		--data-urlencode "client_id=$OAUTH_CLIENT_ID" 2>&1) || die "oauth refresh failed: $resp"
+		--data-urlencode "client_id=$OAUTH_CLIENT_ID" 2>&1)
+	echo "$resp" > "$RUNDIR/oauth-error"
+	case "$resp" in
+		*invalid_grant*|*revoked*) die "oauth refresh: token revoked/expired — re-authorize (oauth-start)" ;;
+	esac
+	[ -n "$(echo "$resp" | grep -oE '"access_token":"[^"]+"')" ] || die "oauth refresh failed: $resp"
 	tok=$(echo "$resp" | grep -oE '"access_token":"[^"]+"' | cut -d'"' -f4)
 	exp=$(echo "$resp" | grep -oE '"expires_in":[0-9]+' | grep -oE '[0-9]+')
 	new_rt=$(echo "$resp" | grep -oE '"refresh_token":"[^"]+"' | cut -d'"' -f4)
@@ -442,6 +448,7 @@ oauth_refresh() {
 			"$tok" "$(( $(date +%s) + exp ))" "${new_rt:-$rt}" "${acct:-}"
 	} > "$OAUTH_JSON"
 	chmod 600 "$OAUTH_JSON"
+	rm -f "$RUNDIR/oauth-error"
 	msg "oauth: token refreshed"
 	echo "$tok"
 }
@@ -628,14 +635,16 @@ cmd_oauth_start() {
 	local resp dc uc vu interval tok exp
 	mkdir -p "$ETC"
 	chmod 700 "$ETC"
-	# 已有有效凭据 → 直接告诉向导（幂等）
-	if [ -f "$OAUTH_JSON" ] && tok=$(oauth_access_token) && [ -n "$tok" ]; then
-		exp=$(grep -oE '"expires_at":[0-9]+' "$OAUTH_JSON" | grep -oE '[0-9]+')
-		if [ -n "$exp" ] && [ "$exp" -gt $(( $(date +%s) + 60 )) ]; then
-			msg '{"already_authorized":true}'
-			return 0
-		fi
+	# 已有有效凭据 → 直接告诉向导（幂等; 真验有效性，refresh 被吊销则清掉）
+	if tok=$(oauth_valid_token 2>/dev/null) && [ -n "$tok" ]; then
+		msg '{"already_authorized":true}'
+		return 0
 	fi
+	case "$(oauth_last_error)" in
+		*invalid_grant*|*revoked*)
+			rm -f "$OAUTH_JSON"
+			;;
+	esac
 	resp=$(curl -fsS --max-time 20 -X POST "$OAUTH_DEVICE_URL" \
 		-H 'User-Agent: wrangler/4.40.0' \
 		--data-urlencode "client_id=$OAUTH_CLIENT_ID" \
@@ -671,15 +680,26 @@ cmd_oauth_start() {
 #   {"state":"failed","error":"..."}         出错
 cmd_oauth_status() {
 	local dc interval now resp tok rt exp acct
-	# 已授权 → 幂等返回
-	if [ -f "$OAUTH_JSON" ] && tok=$(oauth_access_token) && [ -n "$tok" ]; then
+	# 已授权 → 幂等返回（真验有效性: 过期自动 refresh; refresh 被吊销 → 清死凭据走设备流）
+	if tok=$(oauth_valid_token 2>/dev/null) && [ -n "$tok" ]; then
 		msg '{"state":"authorized"}'
 		return 0
 	fi
+	case "$(oauth_last_error)" in
+		*invalid_grant*|*revoked*)
+			rm -f "$OAUTH_JSON"
+			msg '{"state":"failed","error":"stored credentials revoked — cleared, restart authorization"}'
+			return 0
+			;;
+	esac
 	[ -f "$RUNDIR/oauth-device" ] || { msg '{"state":"failed","error":"no device flow in progress"}'; return 0; }
 	. "$RUNDIR/oauth-device"
 	now=$(date +%s)
-	[ "${deadline:-0}" -gt "$now" ] || { msg '{"state":"expired"}'; return 0; }
+	if [ "${deadline:-0}" -le "$now" ]; then
+		rm -f "$RUNDIR/oauth-device"
+		msg '{"state":"expired"}'
+		return 0
+	fi
 	resp=$(curl -sS --max-time 15 -X POST "$OAUTH_TOKEN_URL" \
 		-H 'User-Agent: wrangler/4.40.0' \
 		--data-urlencode 'grant_type=urn:ietf:params:oauth:grant-type:device_code' \
@@ -715,6 +735,11 @@ cmd_oauth_status() {
 			msg '{"state":"failed","error":"'"$(echo "$resp" | head -c 300 | tr -d '\n"')"'"}'
 			;;
 	esac
+}
+
+# refresh 失败原因（oauth-status/oauth-start 快速通道用; RUNDIR tmpfs 自动清）
+oauth_last_error() {
+	cat "$RUNDIR/oauth-error" 2>/dev/null || echo ''
 }
 
 # 用 access token 查账户（wrangler 用 memberships，但 account:read scope 下
@@ -808,11 +833,21 @@ cmd_probe() {
 	ctl_host=$(get_ ctl_hostname ctl)
 	base=$(ctl_base_url)
 
-	# oauth 授权态（文件在 + token 能换出）
+	# oauth 授权态（文件在 + token 真有效; refresh 被吊销 → 清死文件统一报 missing）
 	local oauth=unknown
 	if [ -f "$OAUTH_JSON" ]; then
 		tok=$(oauth_valid_token 2>/dev/null)
-		[ -n "$tok" ] && oauth=ok || oauth=expired
+		if [ -n "$tok" ]; then
+			oauth=ok
+		else
+			case "$(oauth_last_error)" in
+				*invalid_grant*|*revoked*)
+					rm -f "$OAUTH_JSON"
+					oauth=missing
+					;;
+				*) oauth=expired ;;
+			esac
+		fi
 	else
 		oauth=missing
 	fi
