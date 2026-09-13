@@ -78,8 +78,8 @@ cmd_set() {
 	key="${1:-}"
 	val="${2:-}"
 	case "$key" in
-		domain|ctl_hostname|tunnel_name)
-			# 绑定后不可变（ingress hostname/DNS CNAME/Worker route 派生自它们）。
+		domain|tunnel_name)
+			# 绑定后不可变（ingress hostname/DNS CNAME 派生自它们）。
 			# 修改 = 断链；需先 cleanup 解绑。
 			# 例外: cert.pem 不存在（重装路由器后恢复了 UCI 备份但授权丢失）→
 			# 视为未绑定，允许重新选域名（create 自愈会重建隧道，route 加
@@ -90,7 +90,15 @@ cmd_set() {
 					die "$key already bound to '$cur' — run 'hometunnel.sh cleanup' to unbind first"
 				fi
 			fi
-			[ -n "$val" ] || die "$key cannot be empty"
+			;;
+		ctl_hostname)
+			# 开关子域名: 部署前可改（向导⑦冲突后换名重试），
+			# 部署后不可变（Worker 自定义域绑定派生自它）
+			if [ -f "$RUNDIR/worker-deployed" ]; then
+				cur=$(get_ ctl_hostname ctl)
+				[ "$val" = "$cur" ] && { msg "OK: ctl_hostname unchanged"; return 0; }
+				die "ctl_hostname already deployed as '$cur' — run 'hometunnel.sh cleanup' to unbind first"
+			fi
 			;;
 		default_ttl|hard_cap)
 			;;

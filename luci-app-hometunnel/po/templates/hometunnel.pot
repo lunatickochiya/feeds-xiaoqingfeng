@@ -549,3 +549,18 @@ msgstr ""
 
 msgid "Each rule exposes one intranet service as <code>subdomain.domain</code> via the tunnel. Unmatched hostnames/paths always return 404."
 msgstr ""
+
+msgid "Deploy the switch service (a Cloudflare Worker) to your subdomain of %s."
+msgstr ""
+
+msgid "Full name: %s"
+msgstr ""
+
+msgid "You can type a different subdomain above and retry, or take over the domain (this unbinds it from that service)."
+msgstr ""
+
+msgid "The switch domain %s already has a %s DNS record."
+msgstr ""
+
+msgid "Pick a different subdomain above and retry, or delete that record in the Cloudflare dashboard (DNS app) first."
+msgstr ""

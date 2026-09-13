@@ -471,18 +471,46 @@ return view.extend({
 	},
 
 	/* ---- 步骤 7: 自动部署开关服务（OAuth token + 路由器内 curl）---- */
+	/* 子域名可编辑 + 完整域名实时预览；冲突时提示（可改子域名或强制接管） */
 	step7: function (body) {
 		var self = this;
 		var domain = uci.get('hometunnel', 'global', 'domain');
-		var ctlHost = (uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl') + '.' + domain;
+		var savedHost = uci.get('hometunnel', 'global', 'ctl_hostname') || 'ctl';
+		var ctlHost = savedHost + '.' + domain;
 		body.appendChild(E('p', {}, [
-			_('Deploy the switch service (a Cloudflare Worker) to %s').format(ctlHost), ' ',
+			_('Deploy the switch service (a Cloudflare Worker) to your subdomain of %s.').format(domain), ' ',
 			_('Fully automatic from the router, no computer or Node.js needed.')
 		]));
+
+		/* 子域名输入 + 完整域名实时预览（msgid 不带尾空格——LuCI 翻译查找会修剪，
+		   尾空格导致哈希不匹配；整句 %s 翻译同时避免 .format(element) 陷阱） */
+		var preview = E('div', { 'style': 'margin:4px 0 10px 0' },
+			_('Full name: %s').format(ctlHost));
+		var input = E('input', { 'type': 'text', 'value': savedHost,
+			'class': 'cbi-input-text', 'style': 'width:140px' });
+		input.addEventListener('input', function () {
+			var v = input.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+			preview.textContent = _('Full name: %s').format((v || 'ctl') + '.' + domain);
+		});
+		body.appendChild(E('div', { 'style': 'margin:6px 0' }, [
+			E('label', { 'style': 'margin-right:6px' }, _('Switch subdomain')), input
+		]));
+		body.appendChild(preview);
 
 		var btn = E('button', { 'class': 'btn cbi-button cbi-button-apply important' }, _('Deploy Now'));
 		var out = E('pre', { 'style': 'max-height:220px;overflow:auto;font-size:12px' }, '');
 		var warn = E('div', { 'class': 'alert-message warning', 'style': 'display:none' });
+
+		/* 保存子域名后部署（值未变时 set 幂等成功） */
+		var saveAndDeploy = function (args) {
+			var host = input.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+			if (!host) host = 'ctl';
+			fs.exec(HT, ['set', 'ctl_hostname', host]).then(function () {
+				startDeploy(args);
+			}).catch(function () {
+				startDeploy(args);
+			});
+		};
 
 		var startDeploy = function (args) {
 			btn.disabled = true;
@@ -493,54 +521,72 @@ return view.extend({
 			});
 		};
 
+		/* 冲突（挂在其他 Worker）: 可改子域名重试，或确认强制接管 */
+		var showConflict = function (st) {
+			out.textContent = '';
+			warn.innerHTML = '';
+			warn.style.display = '';
+			warn.appendChild(E('div', {}, [
+				_('The switch domain %s is already bound to another service (Worker “%s”).').format(preview.textContent, st.by)
+			]));
+			warn.appendChild(E('div', { 'style': 'margin-top:6px' },
+				_('You can type a different subdomain above and retry, or take over the domain (this unbinds it from that service).')));
+			var yes = E('button', { 'class': 'btn cbi-button cbi-button-apply important', 'style': 'margin-top:8px' },
+				_('Take Over and Deploy'));
+			var no = E('button', { 'class': 'btn cbi-button', 'style': 'margin-top:8px;margin-left:8px' },
+				_('Cancel'));
+			yes.addEventListener('click', function (ev2) {
+				ev2.preventDefault();
+				saveAndDeploy(['takeover']);
+			});
+			no.addEventListener('click', function (ev2) {
+				ev2.preventDefault();
+				warn.style.display = 'none';
+				btn.disabled = false;
+			});
+			warn.appendChild(E('div', {}, [yes, no]));
+		};
+
+		/* 冲突（已有普通 DNS 记录）: 改子域名，或去 dashboard 删记录 */
+		var showDnsConflict = function (st) {
+			out.textContent = '';
+			warn.innerHTML = '';
+			warn.style.display = '';
+			warn.appendChild(E('div', {}, [
+				_('The switch domain %s already has a %s DNS record.').format(preview.textContent, st.by)
+			]));
+			warn.appendChild(E('div', { 'style': 'margin-top:6px' },
+				_('Pick a different subdomain above and retry, or delete that record in the Cloudflare dashboard (DNS app) first.')));
+			var no = E('button', { 'class': 'btn cbi-button', 'style': 'margin-top:8px' },
+				_('Cancel'));
+			no.addEventListener('click', function (ev2) {
+				ev2.preventDefault();
+				warn.style.display = 'none';
+				btn.disabled = false;
+			});
+			warn.appendChild(no);
+		};
+
 		btn.addEventListener('click', function (ev) {
 			ev.preventDefault();
 			btn.disabled = true;
 			out.textContent = 'checking…';
-			/* 预检: 域名冲突 → 弹确认框；干净 → 直接部署 */
+			/* 预检: 冲突 → 提示（可改子域名或强制接管）；干净 → 保存后直接部署 */
 			fs.exec(HT, ['deploy-check']).then(function (res) {
 				var st = null;
 				try { st = JSON.parse((res.stdout || '').trim()); } catch (e) {}
 				if (st && st.state === 'conflict' && st.kind === 'worker') {
-					/* 域名挂在其他 Worker 上 —— 用户确认后才接管 */
-					out.textContent = '';
-					warn.innerHTML = '';
-					warn.style.display = '';
-					warn.appendChild(E('div', {}, [
-						_('The switch domain %s is already bound to another service (Worker “%s”).').format(ctlHost, st.by)
-					]));
-					warn.appendChild(E('div', { 'style': 'margin-top:6px' },
-						_('Taking it over will unbind it from that service. Continue?')));
-					var yes = E('button', { 'class': 'btn cbi-button cbi-button-apply important', 'style': 'margin-top:8px' },
-						_('Take Over and Deploy'));
-					var no = E('button', { 'class': 'btn cbi-button', 'style': 'margin-top:8px;margin-left:8px' },
-						_('Cancel'));
-					yes.addEventListener('click', function (ev2) {
-						ev2.preventDefault();
-						startDeploy(['takeover']);
-					});
-					no.addEventListener('click', function (ev2) {
-						ev2.preventDefault();
-						warn.style.display = 'none';
-						btn.disabled = false;
-					});
-					warn.appendChild(E('div', {}, [yes, no]));
+					showConflict(st);
 					return;
 				}
 				if (st && st.state === 'conflict' && st.kind === 'dns') {
-					out.textContent = '';
-					warn.innerHTML = '';
-					warn.style.display = '';
-					warn.appendChild(E('div', {}, [
-						_('The switch domain %s already has a %s DNS record. Delete it in the Cloudflare dashboard (DNS app), or change the switch hostname in Settings, then retry.').format(ctlHost, st.by)
-					]));
-					btn.disabled = false;
+					showDnsConflict(st);
 					return;
 				}
-				/* clean / 预检失败（后端会给出权威错误）→ 直接部署 */
-				startDeploy([]);
+				/* clean / 预检失败（后端会给出权威错误）→ 保存子域名后部署 */
+				saveAndDeploy([]);
 			}).catch(function () {
-				startDeploy([]);
+				saveAndDeploy([]);
 			});
 		});
 		body.appendChild(E('div', { 'style': 'margin:10px 0' }, [btn]));
@@ -551,7 +597,6 @@ return view.extend({
 			_('Prefer a computer? The classic bundle is still available: run %s on the router and follow the README inside.').format('hometunnel.sh bundle')
 		]));
 	},
-
 	watchDeploy: function (outEl, btn) {
 		return jobPoll('oauth-deploy').then(function (st) {
 			return jobOut('oauth-deploy').then(function (text) {
